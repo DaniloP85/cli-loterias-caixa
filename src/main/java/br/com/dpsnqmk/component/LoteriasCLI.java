@@ -1,12 +1,16 @@
-package br.com.dpsnqmk;
+package br.com.dpsnqmk.component;
 
+import br.com.dpsnqmk.JsonWriter;
 import br.com.dpsnqmk.dto.ConcursoDTO;
+import br.com.dpsnqmk.dto.DataJsonDTO;
 import br.com.dpsnqmk.service.HttpService;
 import me.tongfei.progressbar.ProgressBar;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 @Component
@@ -32,14 +36,23 @@ public class LoteriasCLI implements Callable<Integer> {
         int totalConcursos = buscarTotalConcursos(loteria);
         System.out.printf("Total de concursos da %s: %d%n", loteria, totalConcursos);
 
+        List<DataJsonDTO> dataList = new ArrayList<>();
+
         // 2. Barra de progresso
         try (ProgressBar pb = new ProgressBar("Buscando concursos...", totalConcursos)) {
             for (int concurso = 1; concurso <= totalConcursos; concurso++) {
-                buscarConcurso(loteria, concurso);
+                ConcursoDTO concursoDTO = buscarConcurso(loteria, concurso);
+                dataList.add(new DataJsonDTO(
+                        concursoDTO.getNumero(),
+                        concursoDTO.getTipoJogo().toLowerCase(),
+                        concursoDTO.getDataApuracao(),
+                        concursoDTO.getListaDezenas())
+                );
                 pb.step(); // Atualiza a barra
             }
         }
 
+        JsonWriter.run(dataList, loteria);
         System.out.println("✅ Concluído!");
         return 0;
     }
@@ -50,9 +63,8 @@ public class LoteriasCLI implements Callable<Integer> {
         return concursos.getNumero(); // Retorna o número do último concurso
     }
 
-    private void buscarConcurso(String loteria, int numeroConcurso) throws Exception {
+    private ConcursoDTO buscarConcurso(String loteria, int numeroConcurso) throws Exception {
         String url = String.format("https://servicebus2.caixa.gov.br/portaldeloterias/api/%s/%d", loteria, numeroConcurso);
-        ConcursoDTO concursos = httpService.recuperarConcurso(url);
-
+        return httpService.recuperarConcurso(url);
     }
 }
