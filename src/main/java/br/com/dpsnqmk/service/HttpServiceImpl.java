@@ -17,9 +17,9 @@ public class HttpServiceImpl implements HttpService{
 
     @Override
     @Retryable(
-            value = { HttpServerErrorException.BadGateway.class }, // Rechama para erros do servidor (5xx)
+            value = { HttpServerErrorException.class }, // Rechama para erros do servidor (5xx)
             maxAttempts = 5, // Tenta até 3 vezes
-            backoff = @Backoff(delay = 1000, multiplier = 2) // 1s, depois 2s, depois 4s...
+            backoff = @Backoff(delay = 500, multiplier = 2) // 1s, depois 2s, depois 4s...
     )
     public ConcursoDTO recuperarConcurso(String url) {
         try {
@@ -34,7 +34,7 @@ public class HttpServiceImpl implements HttpService{
         } catch (HttpServerErrorException e) {
             int statusCode = e.getStatusCode().value();
 
-            if (statusCode == 502) {
+            if (statusCode > 400) {
                 System.err.println("Erro 502 - Bad Gateway");
                 // Faça algo específico para 502
             }

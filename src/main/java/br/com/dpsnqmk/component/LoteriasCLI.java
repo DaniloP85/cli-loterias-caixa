@@ -2,6 +2,7 @@ package br.com.dpsnqmk.component;
 
 import br.com.dpsnqmk.JsonWriter;
 import br.com.dpsnqmk.dto.ConcursoDTO;
+import br.com.dpsnqmk.dto.DataDoSorteio;
 import br.com.dpsnqmk.dto.DataJsonDTO;
 import br.com.dpsnqmk.service.HttpService;
 import me.tongfei.progressbar.ProgressBar;
@@ -42,10 +43,16 @@ public class LoteriasCLI implements Callable<Integer> {
         try (ProgressBar pb = new ProgressBar("Buscando concursos...", totalConcursos)) {
             for (int concurso = 1; concurso <= totalConcursos; concurso++) {
                 ConcursoDTO concursoDTO = buscarConcurso(loteria, concurso);
+
+                String[] partes = concursoDTO.getDataApuracao().split("/");
+                String dia = partes[0];    // "29"
+                String mes = partes[1];    // "11"
+                String ano = partes[2];    // "2025"
+
                 dataList.add(new DataJsonDTO(
                         concursoDTO.getNumero(),
                         concursoDTO.getTipoJogo().toLowerCase(),
-                        concursoDTO.getDataApuracao(),
+                        new DataDoSorteio(dia, mes, ano),
                         concursoDTO.getListaDezenas())
                 );
                 pb.step(); // Atualiza a barra

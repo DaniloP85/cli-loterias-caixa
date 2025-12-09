@@ -5,27 +5,27 @@ import java.util.List;
 
 public class DataJsonDTO implements Serializable {
 
-    private int concusso;
+    private int concuso;
 
     private String loteria;
 
-    private String dataDoSorteio;
+    private DataDoSorteio sorteio;
 
     private List<String> dezenasSorteadas;
 
-    public DataJsonDTO(int concusso, String loteria, String dataDoSorteio, List<String> dezenasSorteadas) {
-        this.concusso = concusso;
+    public DataJsonDTO(int concuso, String loteria, DataDoSorteio dataDoSorteio, List<String> dezenasSorteadas) {
+        this.concuso = concuso;
         this.loteria = loteria;
-        this.dataDoSorteio = dataDoSorteio;
+        this.sorteio = dataDoSorteio;
         this.dezenasSorteadas = dezenasSorteadas;
     }
 
-    public int getConcusso() {
-        return concusso;
+    public int getConcuso() {
+        return concuso;
     }
 
-    public void setConcusso(int concusso) {
-        this.concusso = concusso;
+    public void setConcuso(int concuso) {
+        this.concuso = concuso;
     }
 
     public String getLoteria() {
@@ -36,12 +36,12 @@ public class DataJsonDTO implements Serializable {
         this.loteria = loteria;
     }
 
-    public String getDataDoSorteio() {
-        return dataDoSorteio;
+    public DataDoSorteio getSorteio() {
+        return sorteio;
     }
 
-    public void setDataDoSorteio(String dataDoSorteio) {
-        this.dataDoSorteio = dataDoSorteio;
+    public void setSorteio(DataDoSorteio sorteio) {
+        this.sorteio = sorteio;
     }
 
     public List<String> getDezenasSorteadas() {
