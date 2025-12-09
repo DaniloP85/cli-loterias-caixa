@@ -5,7 +5,6 @@ import br.com.dpsnqmk.dto.ConcursoDTO;
 import br.com.dpsnqmk.dto.DataDoSorteio;
 import br.com.dpsnqmk.dto.DataJsonDTO;
 import br.com.dpsnqmk.service.HttpService;
-import me.tongfei.progressbar.ProgressBar;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -39,24 +38,21 @@ public class LoteriasCLI implements Callable<Integer> {
 
         List<DataJsonDTO> dataList = new ArrayList<>();
 
-        // 2. Barra de progresso
-        try (ProgressBar pb = new ProgressBar("Buscando concursos...", totalConcursos)) {
-            for (int concurso = 1; concurso <= totalConcursos; concurso++) {
-                ConcursoDTO concursoDTO = buscarConcurso(loteria, concurso);
+        for (int concurso = 1; concurso <= totalConcursos; concurso++) {
+            ConcursoDTO concursoDTO = buscarConcurso(loteria, concurso);
 
-                String[] partes = concursoDTO.getDataApuracao().split("/");
-                String dia = partes[0];    // "29"
-                String mes = partes[1];    // "11"
-                String ano = partes[2];    // "2025"
+            String[] partes = concursoDTO.getDataApuracao().split("/");
+            String dia = partes[0];    // "29"
+            String mes = partes[1];    // "11"
+            String ano = partes[2];    // "2025"
 
-                dataList.add(new DataJsonDTO(
-                        concursoDTO.getNumero(),
-                        concursoDTO.getTipoJogo().toLowerCase(),
-                        new DataDoSorteio(dia, mes, ano),
-                        concursoDTO.getListaDezenas())
-                );
-                pb.step(); // Atualiza a barra
-            }
+            dataList.add(new DataJsonDTO(
+                    concursoDTO.getNumero(),
+                    concursoDTO.getTipoJogo().toLowerCase(),
+                    new DataDoSorteio(dia, mes, ano),
+                    concursoDTO.getListaDezenas())
+            );
+
         }
 
         JsonWriter.run(dataList, loteria);
