@@ -5,6 +5,8 @@ import br.com.dpsnqmk.dto.ConcursoDTO;
 import br.com.dpsnqmk.dto.DataDoSorteio;
 import br.com.dpsnqmk.dto.DataJsonDTO;
 import br.com.dpsnqmk.service.HttpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -27,6 +29,8 @@ public class LoteriasCLI implements Callable<Integer> {
     )
     private String loteria;
 
+    private static final Logger LOG = LoggerFactory.getLogger(LoteriasCLI.class);
+
     @Autowired
     private HttpService httpService;
 
@@ -34,7 +38,7 @@ public class LoteriasCLI implements Callable<Integer> {
     public Integer call() throws Exception {
         // 1. Busca o total de concursos
         int totalConcursos = buscarTotalConcursos(loteria);
-        System.out.printf("Total de concursos da %s: %d%n", loteria, totalConcursos);
+        LOG.info("Total de concursos da {}: {}", loteria, totalConcursos);
 
         List<DataJsonDTO> dataList = new ArrayList<>();
 
@@ -45,7 +49,7 @@ public class LoteriasCLI implements Callable<Integer> {
             String dia = partes[0];    // "29"
             String mes = partes[1];    // "11"
             String ano = partes[2];    // "2025"
-
+            LOG.info("progresso: {} de {} para a loteria {}", concurso, totalConcursos, loteria);
             dataList.add(new DataJsonDTO(
                     concursoDTO.getNumero(),
                     concursoDTO.getTipoJogo().toLowerCase(),
@@ -56,7 +60,7 @@ public class LoteriasCLI implements Callable<Integer> {
         }
 
         JsonWriter.run(dataList, loteria);
-        System.out.println("✅ Concluído!");
+        LOG.info("✅ Concluído!");
         return 0;
     }
 
