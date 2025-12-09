@@ -22,6 +22,15 @@ echo ""
 
 # Array com todas as loterias da Caixa Econômica Federal
 LOTERIAS=(
+    "megasena"
+    "quina"
+    "lotofacil"
+    "federal"
+    "timemania"
+    "diadesorte"
+    "duplasena"
+    "supersete"
+    "lotomania"
     "maismilionaria"
 )
 
