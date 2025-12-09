@@ -7,7 +7,7 @@ FROM maven:3.8.1-openjdk-17-slim AS builder
 WORKDIR /app
 
 # Copiar o JAR da aplicação
-COPY target/loterias-caixa-1.0.jar /app/loterias-caixa.jar
+COPY target/loterias-caixa-1.3.jar /app/loterias-caixa.jar
 
 # Copiar scripts
 COPY run-all-loterias.sh /app/run-all-loterias.sh
