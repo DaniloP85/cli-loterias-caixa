@@ -12,40 +12,57 @@ Sistema automatizado para download de todas as loterias da Caixa Econômica Fede
 
 ### Opção 1: Usando Docker Compose (Recomendado)
 
-```bash
 # 1. Compilar o projeto Java (se ainda não compilou)
+
+```bash
 mvn clean package
+```
 
 # 2. Construir e executar os containers
+
+```bash
 docker-compose up --build
+```
 
 # 3. Para executar em background
+
+```bash
 docker-compose up -d --build
+```
 
 # 4. Ver logs
+```bash
 docker-compose logs -f loterias-downloader
+```
 
 # 5. Parar os containers
+```bash
 docker-compose down
 ```
 
 ### Opção 2: Usando Docker diretamente
 
-```bash
 # 1. Construir a imagem
+```bash
 docker build -t loterias-caixa: latest .
+```
 
 # 2. Executar o container
+
+```bash
 docker run --name loterias-downloader loterias-caixa:latest
+```
 
 # 3. Ver logs
+
+```bash
 docker logs -f loterias-downloader
 ```
 
 ### Opção 3: Executar uma loteria específica
 
-```bash
 # Sobrescrever o entrypoint para executar apenas uma loteria
+```bash
 docker run --rm loterias-caixa:latest \
   bash -c "java -jar /app/cli-loterias-caixa.jar -l quina"
 ```
@@ -61,7 +78,7 @@ O script processa automaticamente as seguintes loterias:
 5. Timemania
 6. Dupla Sena
 7. Federal
-8. Loteca
+8. Mais Milionaria
 9. Dia de Sorte
 10. Super Sete
 
@@ -129,24 +146,40 @@ Data final: 2025-12-08 10:32:15
 
 ## 🐳 Publicar no Docker Hub
 
-```bash
 # 1. Login no Docker Hub
+```bash
 docker login
+```
+
+```bash
+docker build -t loterias-caixa .
+```
+
+
+```bash
+docker tag 1.0 danilo85/loterias-caixa:1.0
+```
 
 # 2. Tag da imagem
-docker tag loterias-caixa:latest daniloop85/loterias-caixa:latest
-docker tag loterias-caixa:latest daniloop85/loterias-caixa: 1.5
+
+```bash
+docker tag 1.0 danilo85/loterias-caixa:1.0
+```
 
 # 3. Push para o Docker Hub
-docker push daniloop85/loterias-caixa:latest
-docker push daniloop85/loterias-caixa:1.5
+
+```bash
+docker push danilo85/loterias-caixa:1.0
 ```
 
 Depois você pode usar diretamente do Docker Hub:
 
 ```bash
-docker pull daniloop85/loterias-caixa:latest
-docker run daniloop85/loterias-caixa:latest
+docker pull danilo85/loterias-caixa:latest
+```
+
+```bash
+docker run danilo85/loterias-caixa:latest
 ```
 
 ## 🌩️ Deploy na AWS
@@ -191,25 +224,27 @@ crontab -e
 
 ### Container falha ao iniciar
 
-```bash
-# Ver logs detalhados
-docker-compose logs loterias-downloader
+#### Ver logs detalhados
 
-# Verificar se o JAR existe
+```bash
+docker-compose logs loterias-downloader
+```
+
+#### Verificar se o JAR existe
+
+```bash
 docker run --rm loterias-caixa ls -la /app/
 ```
 
 ### MongoDB não conecta
 
+#### Verificar se o MongoDB está rodando
 ```bash
-# Verificar se o MongoDB está rodando
 docker-compose ps
-
-# Testar conexão
-docker exec -it loterias-mongodb mongosh -u admin -p loterias123
 ```
 
-## 📄 Licença
+#### Testar conexão
 
-Projeto pessoal - DaniloP85
+```bash
+docker exec -it loterias-mongodb mongosh -u admin -p loterias123
 ```

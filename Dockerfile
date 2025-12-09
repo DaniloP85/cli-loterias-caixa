@@ -1,19 +1,23 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM maven:3.8.1-openjdk-17-slim AS builder
 
-# Instalar bash para o script de execução
-RUN apk add --no-cache bash
+# Instalar ferramentas necessárias
+# RUN apk add --no-cache bash openssl ca-certificates
 
 # Criar diretório de trabalho
 WORKDIR /app
 
 # Copiar o JAR da aplicação
-COPY target/cli-loterias-caixa-1.5-SNAPSHOT.jar /app/cli-loterias-caixa. jar
+COPY target/loterias-caixa-1.0.jar /app/loterias-caixa.jar
 
-# Copiar o script de execução
+# Copiar scripts
 COPY run-all-loterias.sh /app/run-all-loterias.sh
+COPY install-caixa-cert.sh /app/install-caixa-cert.sh
 
-# Dar permissão de execução ao script
-RUN chmod +x /app/run-all-loterias.sh
+# Dar permissão de execução aos scripts
+RUN chmod +x /app/run-all-loterias.sh /app/install-caixa-cert.sh
+
+# Baixar e instalar o certificado da Caixa
+RUN /app/install-caixa-cert.sh
 
 # Definir o script como entrypoint
 ENTRYPOINT ["/app/run-all-loterias.sh"]

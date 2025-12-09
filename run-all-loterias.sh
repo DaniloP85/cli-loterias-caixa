@@ -2,7 +2,7 @@
 
 # Script para executar o download de todas as loterias da Caixa
 # Autor: DaniloP85
-# Data:  2025-12-08
+# Data: 2025-12-09
 
 echo "=========================================="
 echo "Iniciando download de todas as loterias"
@@ -10,18 +10,19 @@ echo "Data: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
 echo ""
 
+# Verificar se o certificado está instalado
+echo "🔍 Verificando certificado da Caixa..."
+if keytool -list -alias caixa-gov-br -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit > /dev/null 2>&1; then
+    echo "✓ Certificado da Caixa encontrado!"
+else
+    echo "⚠️  Certificado da Caixa não encontrado, tentando instalar..."
+    /app/install-caixa-cert.sh
+fi
+echo ""
+
 # Array com todas as loterias da Caixa Econômica Federal
 LOTERIAS=(
-    "megasena"
-    "quina"
-    "lotofacil"
-    "lotomania"
-    "timemania"
-    "duplasena"
-    "federal"
-    "loteca"
-    "diadesorte"
-    "supersete"
+    "maismilionaria"
 )
 
 # Contadores
@@ -39,7 +40,7 @@ for i in "${!LOTERIAS[@]}"; do
     echo "----------------------------------------"
 
     # Executar o JAR com a loteria específica
-    java -jar /app/cli-loterias-caixa.jar -l "$LOTERIA"
+    java -jar /app/loterias-caixa.jar -l "$LOTERIA"
 
     # Verificar o código de retorno
     if [ $? -eq 0 ]; then
@@ -62,9 +63,9 @@ done
 echo "=========================================="
 echo "Processamento finalizado!"
 echo "=========================================="
-echo "Total de loterias:  $TOTAL"
+echo "Total de loterias: $TOTAL"
 echo "Sucesso: $SUCESSO"
-echo "Erros: $ERRO"
+echo "Erros:  $ERRO"
 echo "Data final: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
 
