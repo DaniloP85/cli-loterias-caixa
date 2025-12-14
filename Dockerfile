@@ -6,8 +6,15 @@ FROM maven:3.8.1-openjdk-17-slim AS builder
 # Criar diretório de trabalho
 WORKDIR /app
 
+# Copiar arquivos do Maven primeiro (melhor uso de cache)
+COPY pom.xml .
+COPY src ./src
+
+# Buildar a aplicação
+RUN mvn clean package -DskipTests
+
 # Copiar o JAR da aplicação
-COPY target/loterias-caixa-1.3.jar /app/loterias-caixa.jar
+COPY target/*.jar /app/loterias-caixa.jar
 
 # Copiar scripts
 COPY run-all-loterias.sh /app/run-all-loterias.sh

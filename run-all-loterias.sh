@@ -25,13 +25,6 @@ LOTERIAS=(
     "megasena"
     "quina"
     "lotofacil"
-    "federal"
-    "timemania"
-    "diadesorte"
-    "duplasena"
-    "supersete"
-    "lotomania"
-    "maismilionaria"
 )
 
 # Contadores

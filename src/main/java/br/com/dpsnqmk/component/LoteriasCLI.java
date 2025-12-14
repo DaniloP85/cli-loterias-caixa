@@ -1,19 +1,26 @@
 package br.com.dpsnqmk.component;
 
-import br.com.dpsnqmk.JsonWriter;
 import br.com.dpsnqmk.dto.ConcursoDTO;
-import br.com.dpsnqmk.dto.DataDoSorteio;
-import br.com.dpsnqmk.dto.DataJsonDTO;
+import br.com.dpsnqmk.dto.ConcursoMongoDTO;
+import br.com.dpsnqmk.dto.FeaturesDTO;
+import br.com.dpsnqmk.enums.Loteria;
+import br.com.dpsnqmk.records.AltosBaixos;
+import br.com.dpsnqmk.records.ParesImparesFeature;
 import br.com.dpsnqmk.service.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+
+import static br.com.dpsnqmk.utility.MyMath.*;
 
 @Component
 @CommandLine.Command(
@@ -34,32 +41,48 @@ public class LoteriasCLI implements Callable<Integer> {
     @Autowired
     private HttpService httpService;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     @Override
     public Integer call() throws Exception {
         // 1. Busca o total de concursos
         int totalConcursos = buscarTotalConcursos(loteria);
         LOG.info("Total de concursos da {}: {}", loteria, totalConcursos);
 
-        List<DataJsonDTO> dataList = new ArrayList<>();
-
         for (int concurso = 1; concurso <= totalConcursos; concurso++) {
             ConcursoDTO concursoDTO = buscarConcurso(loteria, concurso);
 
-            String[] partes = concursoDTO.getDataApuracao().split("/");
-            String dia = partes[0];    // "29"
-            String mes = partes[1];    // "11"
-            String ano = partes[2];    // "2025"
-            LOG.info("progresso: {} de {} para a loteria {}", concurso, totalConcursos, loteria);
-            dataList.add(new DataJsonDTO(
+            List<Integer> numerosSorteados = concursoDTO.getListaDezenas().stream()
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+
+            Date data = new SimpleDateFormat("dd/MM/yyyy").parse(concursoDTO.getDataApuracao());
+            Long soma = numerosSorteados.stream().mapToLong(Integer::longValue).sum();
+            AltosBaixos AltosBaixos = contarAltosBaixos(numerosSorteados, Loteria.valueOf(loteria.toUpperCase()));
+            ParesImparesFeature paresImparesFeature = calcularParesImpares(numerosSorteados);
+
+            ConcursoMongoDTO concursoMongoDTO = new ConcursoMongoDTO(
                     concursoDTO.getNumero(),
                     concursoDTO.getTipoJogo().toLowerCase(),
-                    new DataDoSorteio(dia, mes, ano),
-                    concursoDTO.getListaDezenas())
+                    numerosSorteados,
+                    data,
+                    "processado",
+                    new FeaturesDTO(
+                            soma,
+                            getMedia((double) soma, numerosSorteados),
+                            getLogProduto(numerosSorteados),
+                            paresImparesFeature.pares(),
+                            paresImparesFeature.impares(),
+                            AltosBaixos.baixos(),
+                            AltosBaixos.altos(),
+                            calcularDesvioPadrao(numerosSorteados)
+                    )
             );
-
+            LOG.info("progresso: {} de {} para a loteria {}", concurso, totalConcursos, loteria);
+            mongoTemplate.insert(concursoMongoDTO, "resultados");
         }
 
-        JsonWriter.run(dataList, loteria);
         LOG.info("✅ Concluído!");
         return 0;
     }

@@ -1,6 +1,7 @@
-package br.com.dpsnqmk.service;
+package br.com.dpsnqmk.service.impl;
 
 import br.com.dpsnqmk.dto.ConcursoDTO;
+import br.com.dpsnqmk.service.HttpService;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
@@ -11,7 +12,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class HttpServiceImpl implements HttpService{
+public class HttpServiceImpl implements HttpService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
