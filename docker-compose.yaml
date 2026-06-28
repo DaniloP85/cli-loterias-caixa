@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: billing_user
+      POSTGRES_PASSWORD: together!234
+      POSTGRES_DB: billing_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   mongodb:
     image: mongo:7.0
     container_name: loterias-mongodb
@@ -17,26 +30,28 @@ services:
     networks:
       - loterias-network
 
-  loterias-downloader:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: loterias-downloader
-    depends_on:
-      - mongodb
-    environment:
-      - MONGODB_HOST=mongodb
-      - MONGODB_PORT=27017
-      - MONGODB_DATABASE=loterias
-      - MONGODB_USERNAME=admin
-      - MONGODB_PASSWORD=loterias123
-    volumes:
-      # Se você quiser salvar os arquivos baixados localmente
-      - ./downloads:/app/downloads
-    networks:
-      - loterias-network
+#  loterias-downloader:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: loterias-downloader
+#    depends_on:
+#      - mongodb
+#    environment:
+#      - MONGODB_HOST=mongodb
+#      - MONGODB_PORT=27017
+#      - MONGODB_DATABASE=loterias
+#      - MONGODB_USERNAME=admin
+#      - MONGODB_PASSWORD=loterias123
+#    volumes:
+#      # Se você quiser salvar os arquivos baixados localmente
+#      - ./downloads:/app/downloads
+#    networks:
+#      - loterias-network
 
 volumes:
+  postgres_data:
+    driver: local
   mongodb_data:
     driver: local
   mongodb_config:

@@ -29,6 +29,8 @@ import static br.com.dpsnqmk.utility.MyMath.*;
 )
 public class LoteriasCLI implements Callable<Integer> {
 
+    public static final String URL = "https://servicebus2.caixa.gov.br/portaldeloterias/api/";
+
     @CommandLine.Option(
             names = {"-l", "--loteria"},
             description = "Loteria desejada: megasena, quina, lotofacil, etc.",
@@ -47,7 +49,7 @@ public class LoteriasCLI implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         // 1. Busca o total de concursos
-        int totalConcursos = buscarTotalConcursos(loteria);
+        int totalConcursos = buscarConcurso(loteria).getNumero();
         LOG.info("Total de concursos da {}: {}", loteria, totalConcursos);
 
         for (int concurso = 1; concurso <= totalConcursos; concurso++) {
@@ -87,14 +89,13 @@ public class LoteriasCLI implements Callable<Integer> {
         return 0;
     }
 
-    private int buscarTotalConcursos(String loteria) throws Exception {
-        String url = String.format("https://servicebus2.caixa.gov.br/portaldeloterias/api/%s/", loteria);
-        ConcursoDTO concursos = httpService.recuperarConcurso(url);
-        return concursos.getNumero(); // Retorna o número do último concurso
+    private ConcursoDTO buscarConcurso(String loteria) throws Exception {
+        String url = String.format(URL + "%s/", loteria);
+        return httpService.recuperarConcurso(url);
     }
 
     private ConcursoDTO buscarConcurso(String loteria, int numeroConcurso) throws Exception {
-        String url = String.format("https://servicebus2.caixa.gov.br/portaldeloterias/api/%s/%d", loteria, numeroConcurso);
+        String url = String.format(URL + "%s/%d", loteria, numeroConcurso);
         return httpService.recuperarConcurso(url);
     }
 }
