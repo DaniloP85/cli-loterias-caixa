@@ -80,8 +80,13 @@
     </table>
 </c:if>
 
+<c:if test="${not empty jogos and empty resultados}">
+    <h2>Sorteios premiados</h2>
+    <p>Nenhum prêmio ainda — os sorteios premiados dos seus jogos aparecerão aqui.</p>
+</c:if>
+
 <c:if test="${not empty resultados}">
-    <h2>Resultados dos sorteios</h2>
+    <h2>Sorteios premiados</h2>
     <p class="legenda-cores">
         <span><span class="dezena acertada">07</span> dezena jogada e acertada</span>
         <span><span class="dezena">02</span> dezena jogada, não saiu no sorteio</span>
@@ -108,7 +113,7 @@
                     </c:forEach>
                 </td>
                 <td>
-                    <span class="badge ${item.premiado ? 'premiado' : 'comum'}">${item.acertos}
+                    <span class="badge premiado">${item.acertos}
                         <c:choose><c:when test="${item.acertos == 1}">acerto</c:when><c:otherwise>acertos</c:otherwise></c:choose>
                     </span>
                 </td>

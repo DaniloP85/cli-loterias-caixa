@@ -82,12 +82,12 @@ public class JogoService {
         return conferirContra(resultado, dezenas, loteria);
     }
 
-    /** Uma linha por sorteio já realizado de cada jogo cadastrado, mais recente primeiro. */
+    /** Sorteios premiados dos jogos cadastrados (retorno financeiro), mais recente primeiro. */
     public List<ResultadoSorteio> resultadosSorteios() {
         List<ResultadoSorteio> resultados = new ArrayList<>();
         for (JogoMongoDTO jogo : jogoRepository.findAll()) {
             for (ConferenciaConcurso conferencia : conferirConcursos(jogo)) {
-                if (ConferenciaConcurso.PENDENTE.equals(conferencia.getSituacao())) {
+                if (!ConferenciaConcurso.PREMIADO.equals(conferencia.getSituacao())) {
                     continue;
                 }
                 resultados.add(new ResultadoSorteio(
@@ -97,7 +97,7 @@ public class JogoService {
                         jogo.getNumeros(),
                         conferencia.getDezenasAcertadas(),
                         conferencia.getAcertos(),
-                        ConferenciaConcurso.PREMIADO.equals(conferencia.getSituacao()),
+                        true,
                         jogo.getDescricao()));
             }
         }
