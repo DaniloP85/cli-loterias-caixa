@@ -48,6 +48,11 @@ public class JogoService {
                         + loteria.nome() + " (" + loteria.getMin() + " a " + loteria.getMax() + ")");
             }
         }
+        if (dezenas.size() < loteria.getMinDezenas() || dezenas.size() > loteria.getMaxDezenas()) {
+            throw new IllegalArgumentException("A " + loteria.nome() + " aceita de "
+                    + loteria.getMinDezenas() + " a " + loteria.getMaxDezenas()
+                    + " dezenas por jogo (recebi " + dezenas.size() + ")");
+        }
         if (concursoInicial == null || concursoInicial < 1) {
             throw new IllegalArgumentException("Concurso inicial deve ser maior ou igual a 1");
         }
@@ -83,8 +88,7 @@ public class JogoService {
 
     private List<ConferenciaConcurso> conferirConcursos(JogoMongoDTO jogo) {
         Map<Integer, ConcursoMongoDTO> resultadosPorConcurso = concursoRepository
-                .findByLoteriaAndConcursoGreaterThanEqualAndConcursoLessThanEqualOrderByConcursoAsc(
-                        jogo.getLoteria(), jogo.getConcursoInicial(), jogo.getConcursoFinal())
+                .findConcursosNoIntervalo(jogo.getLoteria(), jogo.getConcursoInicial(), jogo.getConcursoFinal())
                 .stream()
                 .collect(Collectors.toMap(ConcursoMongoDTO::getConcurso, Function.identity(), (a, b) -> a));
 

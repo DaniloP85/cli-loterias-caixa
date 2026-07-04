@@ -50,6 +50,17 @@ public class PaginasController {
         private final String estadoImportacao;
     }
 
+    /** Configuração de cada loteria para o volante de cadastro de jogos. */
+    @Getter
+    @AllArgsConstructor
+    public static class ConfigLoteria {
+        private final String nome;
+        private final int min;
+        private final int max;
+        private final int minDezenas;
+        private final int maxDezenas;
+    }
+
     @GetMapping("/")
     public String home(Model model) {
         List<CardLoteria> cards = Arrays.stream(Loteria.values())
@@ -91,14 +102,20 @@ public class PaginasController {
         model.addAttribute("loteria", loteria.nome());
         model.addAttribute("totalConcursos", estatisticas.totalConcursos());
         model.addAttribute("medias", estatisticas.medias());
+        model.addAttribute("dezenaMin", loteria.getMin());
+        model.addAttribute("dezenaMax", loteria.getMax());
         model.addAttribute("abaAtiva", "manutencao");
         return "dashboard";
     }
 
     @GetMapping("/jogos")
     public String jogos(Model model) {
+        List<ConfigLoteria> loterias = Arrays.stream(Loteria.values())
+                .map(loteria -> new ConfigLoteria(loteria.nome(), loteria.getMin(), loteria.getMax(),
+                        loteria.getMinDezenas(), loteria.getMaxDezenas()))
+                .toList();
         model.addAttribute("jogos", jogoService.listarComResumo());
-        model.addAttribute("loterias", Arrays.stream(Loteria.values()).map(Loteria::nome).toList());
+        model.addAttribute("loterias", loterias);
         model.addAttribute("abaAtiva", "jogos");
         return "jogos";
     }

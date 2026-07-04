@@ -47,8 +47,8 @@ A navegação é dividida em abas: **Manutenção**, **Meus jogos** e **Machine 
 | Manutenção (cards com progresso ao vivo, botões Atualizar/Reconstruir) | `/` |
 | Concursos (tabela paginada) | `/loterias/{loteria}` |
 | Detalhe do concurso + features | `/loterias/{loteria}/concursos/{numero}` |
-| Dashboard (frequência das dezenas, médias) | `/loterias/{loteria}/dashboard` |
-| Meus jogos (cadastro de teimosinhas + resumo acertei/errei) | `/jogos` |
+| Dashboard (mapa de calor das dezenas, médias) | `/loterias/{loteria}/dashboard` |
+| Meus jogos (volante clicável + resumo acertei/errei) | `/jogos` |
 | Conferência de um jogo, concurso a concurso | `/jogos/{id}` |
 | Machine Learning (em breve) | `/ml` |
 

@@ -8,19 +8,25 @@ import java.util.stream.Collectors;
 @Getter
 public enum Loteria {
 
-    MEGASENA(1, 60, 4),
-    LOTOFACIL(1, 25, 11),
-    QUINA(1, 80, 2),
-    LOTOMANIA(0, 99, 15);
+    // min/max = intervalo das dezenas; minDezenas/maxDezenas = quantas o volante
+    // da Caixa permite marcar por aposta
+    MEGASENA(1, 60, 4, 6, 20),
+    LOTOFACIL(1, 25, 11, 15, 20),
+    QUINA(1, 80, 2, 5, 15),
+    LOTOMANIA(0, 99, 15, 50, 50);
 
     private final int min;
     private final int max;
     private final int minAcertosPremio;
+    private final int minDezenas;
+    private final int maxDezenas;
 
-    Loteria(int min, int max, int minAcertosPremio) {
+    Loteria(int min, int max, int minAcertosPremio, int minDezenas, int maxDezenas) {
         this.min = min;
         this.max = max;
         this.minAcertosPremio = minAcertosPremio;
+        this.minDezenas = minDezenas;
+        this.maxDezenas = maxDezenas;
     }
 
     public double limiteBaixoAlto() {

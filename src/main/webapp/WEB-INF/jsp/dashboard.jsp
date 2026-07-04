@@ -19,34 +19,47 @@
     </c:forEach>
 </div>
 
-<h2>Frequência das dezenas</h2>
-<canvas id="graficoFrequencia" height="110"></canvas>
+<h2>Mapa de calor das dezenas</h2>
+<p class="legenda-mapa">menos sorteada <span class="gradiente"></span> mais sorteada</p>
+<div class="mapa-calor" id="mapa-calor" data-min="${dezenaMin}" data-max="${dezenaMax}"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
     var loteria = '${loteria}';
+    var mapa = document.getElementById('mapa-calor');
+    var dezenaMin = parseInt(mapa.dataset.min, 10);
+    var dezenaMax = parseInt(mapa.dataset.max, 10);
 
     fetch('/api/loterias/' + loteria + '/estatisticas')
         .then(function (resposta) { return resposta.json(); })
         .then(function (estatisticas) {
-            var dezenas = estatisticas.frequenciaDezenas.map(function (f) { return f.dezena; });
-            var frequencias = estatisticas.frequenciaDezenas.map(function (f) { return f.frequencia; });
-
-            new Chart(document.getElementById('graficoFrequencia'), {
-                type: 'bar',
-                data: {
-                    labels: dezenas,
-                    datasets: [{
-                        label: 'vezes sorteada',
-                        data: frequencias,
-                        backgroundColor: '#2563eb'
-                    }]
-                },
-                options: {
-                    plugins: {legend: {display: false}},
-                    scales: {y: {beginAtZero: true}}
+            var frequencias = {};
+            var maiorFrequencia = 0;
+            estatisticas.frequenciaDezenas.forEach(function (item) {
+                frequencias[item.dezena] = item.frequencia;
+                if (item.frequencia > maiorFrequencia) {
+                    maiorFrequencia = item.frequencia;
                 }
             });
+
+            for (var numero = dezenaMin; numero <= dezenaMax; numero++) {
+                var celula = document.createElement('div');
+                celula.className = 'celula-calor';
+                var vezes = frequencias[numero] || 0;
+                var intensidade = maiorFrequencia === 0 ? 0 : vezes / maiorFrequencia;
+                if (intensidade === 0) {
+                    celula.style.background = '#e5e7eb';
+                } else {
+                    celula.style.background =
+                        'rgba(220, 38, 38, ' + (0.15 + 0.85 * intensidade).toFixed(3) + ')';
+                }
+                if (intensidade > 0.55) {
+                    celula.classList.add('intensa');
+                }
+                celula.textContent = numero < 10 ? '0' + numero : numero;
+                celula.title = 'dezena ' + numero + ' — sorteada ' + vezes
+                    + (vezes === 1 ? ' vez' : ' vezes');
+                mapa.appendChild(celula);
+            }
         });
 </script>
 
