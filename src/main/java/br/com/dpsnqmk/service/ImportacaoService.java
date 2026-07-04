@@ -28,7 +28,7 @@ import static br.com.dpsnqmk.utility.MyMath.*;
 @Service
 public class ImportacaoService {
 
-    public static final String URL_BASE = "https://servicebus2.caixa.gov.br/portaldeloterias/api/";
+    public static final String URL_BASE = "https://servicebus3.caixa.gov.br/portaldeloterias/api/";
 
     private static final Logger LOG = LoggerFactory.getLogger(ImportacaoService.class);
 
