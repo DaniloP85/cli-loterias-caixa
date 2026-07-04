@@ -14,6 +14,10 @@ public interface ConcursoRepository extends MongoRepository<ConcursoMongoDTO, St
 
     List<ConcursoMongoDTO> findByLoteriaOrderByConcursoAsc(String loteria);
 
+    // "Between" no Spring Data Mongo gera $gt/$lt (exclusivo), por isso o nome explícito
+    List<ConcursoMongoDTO> findByLoteriaAndConcursoGreaterThanEqualAndConcursoLessThanEqualOrderByConcursoAsc(
+            String loteria, int concursoInicial, int concursoFinal);
+
     Optional<ConcursoMongoDTO> findByLoteriaAndConcurso(String loteria, int concurso);
 
     Optional<ConcursoMongoDTO> findTopByLoteriaOrderByConcursoDesc(String loteria);

@@ -12,7 +12,11 @@
 <body>
 <nav>
     <a href="/" class="marca">🎲 Loterias Caixa</a>
+    <a href="/" class="aba ${abaAtiva == 'manutencao' ? 'ativa' : ''}">Manutenção</a>
+    <a href="/jogos" class="aba ${abaAtiva == 'jogos' ? 'ativa' : ''}">Meus jogos</a>
+    <a href="/ml" class="aba ${abaAtiva == 'ml' ? 'ativa' : ''}">Machine Learning</a>
     <c:if test="${not empty loteria}">
+        <span class="separador">|</span>
         <a href="/loterias/${loteria}">Concursos</a>
         <a href="/loterias/${loteria}/dashboard">Dashboard</a>
         <a href="/api/loterias/${loteria}/export?formato=csv">Exportar CSV</a>

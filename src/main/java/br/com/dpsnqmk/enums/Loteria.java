@@ -1,21 +1,26 @@
 package br.com.dpsnqmk.enums;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Getter
 public enum Loteria {
 
-    MEGASENA(1, 60),
-    LOTOFACIL(1, 25),
-    QUINA(1, 80),
-    LOTOMANIA(0, 99);
+    MEGASENA(1, 60, 4),
+    LOTOFACIL(1, 25, 11),
+    QUINA(1, 80, 2),
+    LOTOMANIA(0, 99, 15);
 
     private final int min;
     private final int max;
+    private final int minAcertosPremio;
 
-    Loteria(int min, int max) {
+    Loteria(int min, int max, int minAcertosPremio) {
         this.min = min;
         this.max = max;
+        this.minAcertosPremio = minAcertosPremio;
     }
 
     public double limiteBaixoAlto() {
@@ -25,6 +30,14 @@ public enum Loteria {
     /** Nome usado na URL da API da Caixa e no campo `loteria` do MongoDB. */
     public String nome() {
         return name().toLowerCase();
+    }
+
+    /** Atingiu alguma faixa de premiação? Na lotomania, 0 acertos também premia. */
+    public boolean premiado(int acertos) {
+        if (this == LOTOMANIA && acertos == 0) {
+            return true;
+        }
+        return acertos >= minAcertosPremio;
     }
 
     public static Loteria from(String nome) {

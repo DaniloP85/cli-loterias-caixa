@@ -40,12 +40,19 @@ java -jar target/loterias-caixa.war   # WAR executável (Tomcat embutido)
 
 ## 🌐 Páginas
 
+A navegação é dividida em abas: **Manutenção**, **Meus jogos** e **Machine Learning** (placeholder — integração AWS futura).
+
 | Página | URL |
 |---|---|
-| Home (cards das loterias + botão importar) | `/` |
+| Manutenção (cards com progresso ao vivo, botões Atualizar/Reconstruir) | `/` |
 | Concursos (tabela paginada) | `/loterias/{loteria}` |
 | Detalhe do concurso + features | `/loterias/{loteria}/concursos/{numero}` |
 | Dashboard (frequência das dezenas, médias) | `/loterias/{loteria}/dashboard` |
+| Meus jogos (cadastro de teimosinhas + resumo acertei/errei) | `/jogos` |
+| Conferência de um jogo, concurso a concurso | `/jogos/{id}` |
+| Machine Learning (em breve) | `/ml` |
+
+Na aba Manutenção, **Atualizar** importa só o que falta (compara o último concurso da base com o da API da Caixa) e **Reconstruir** apaga a loteria e reimporta tudo. Durante a importação o card mostra barra de progresso, percentual e "concurso X de Y" alimentados por **SSE** a cada inserção.
 
 ## 🔌 API REST
 
@@ -53,6 +60,11 @@ java -jar target/loterias-caixa.war   # WAR executável (Tomcat embutido)
 |---|---|---|
 | POST | `/api/loterias/{loteria}/importacao?completo=false` | Dispara a importação em background (202). `completo=true` apaga e reimporta tudo; sem ele, retoma do último concurso salvo. |
 | GET | `/api/loterias/{loteria}/importacao/status` | Progresso da importação (estado, processados, total, percentual). |
+| GET | `/api/loterias/{loteria}/importacao/eventos` | **SSE**: stream `text/event-stream` com um evento `status` por inserção (e o status atual ao conectar). |
+| POST | `/api/jogos` | Cadastra um jogo/teimosinha: `{loteria, numeros, concursoInicial, quantidadeConcursos, descricao}` (201). |
+| GET | `/api/jogos` | Lista os jogos com resumo (premiados/não premiados/pendentes). |
+| GET | `/api/jogos/{id}/conferencia` | Conferência completa do jogo, concurso a concurso. |
+| DELETE | `/api/jogos/{id}` | Remove o jogo (204). |
 | GET | `/api/loterias/{loteria}/concursos?page=0&size=20` | Concursos paginados (mais recentes primeiro). |
 | GET | `/api/loterias/{loteria}/concursos/{numero}` | Um concurso com as features estatísticas. |
 | GET | `/api/loterias/{loteria}/estatisticas` | Agregações: frequência de cada dezena e médias das features. |

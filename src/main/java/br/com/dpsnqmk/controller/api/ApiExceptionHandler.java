@@ -20,8 +20,13 @@ public class ApiExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("erro", mensagem));
     }
 
-    @ExceptionHandler(ConcursoNaoEncontradoException.class)
-    public ResponseEntity<Map<String, String>> concursoNaoEncontrado(ConcursoNaoEncontradoException e) {
+    @ExceptionHandler({ConcursoNaoEncontradoException.class, JogoNaoEncontradoException.class})
+    public ResponseEntity<Map<String, String>> naoEncontrado(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> argumentoInvalido(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
     }
 }

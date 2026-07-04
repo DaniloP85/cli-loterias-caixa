@@ -2,11 +2,13 @@ package br.com.dpsnqmk.controller.web;
 
 import br.com.dpsnqmk.controller.api.ConcursoNaoEncontradoException;
 import br.com.dpsnqmk.dto.ConcursoMongoDTO;
+import br.com.dpsnqmk.dto.ConferenciaJogo;
 import br.com.dpsnqmk.dto.EstatisticasDTO;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.repository.ConcursoRepository;
 import br.com.dpsnqmk.service.EstatisticaService;
 import br.com.dpsnqmk.service.ImportacaoService;
+import br.com.dpsnqmk.service.JogoService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -27,13 +29,16 @@ public class PaginasController {
     private final ConcursoRepository repository;
     private final EstatisticaService estatisticaService;
     private final ImportacaoService importacaoService;
+    private final JogoService jogoService;
 
     public PaginasController(ConcursoRepository repository,
                              EstatisticaService estatisticaService,
-                             ImportacaoService importacaoService) {
+                             ImportacaoService importacaoService,
+                             JogoService jogoService) {
         this.repository = repository;
         this.estatisticaService = estatisticaService;
         this.importacaoService = importacaoService;
+        this.jogoService = jogoService;
     }
 
     /** View model dos cards da home (classe com getters porque EL do JSP não resolve records). */
@@ -54,6 +59,7 @@ public class PaginasController {
                         importacaoService.status(loteria).getEstado().name()))
                 .toList();
         model.addAttribute("cards", cards);
+        model.addAttribute("abaAtiva", "manutencao");
         return "home";
     }
 
@@ -65,6 +71,7 @@ public class PaginasController {
                 PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "concurso")));
         model.addAttribute("loteria", loteria.nome());
         model.addAttribute("pagina", pagina);
+        model.addAttribute("abaAtiva", "manutencao");
         return "concursos";
     }
 
@@ -74,6 +81,7 @@ public class PaginasController {
                 .orElseThrow(() -> new ConcursoNaoEncontradoException(loteria.nome(), numero));
         model.addAttribute("loteria", loteria.nome());
         model.addAttribute("concurso", concurso);
+        model.addAttribute("abaAtiva", "manutencao");
         return "concurso";
     }
 
@@ -83,6 +91,29 @@ public class PaginasController {
         model.addAttribute("loteria", loteria.nome());
         model.addAttribute("totalConcursos", estatisticas.totalConcursos());
         model.addAttribute("medias", estatisticas.medias());
+        model.addAttribute("abaAtiva", "manutencao");
         return "dashboard";
+    }
+
+    @GetMapping("/jogos")
+    public String jogos(Model model) {
+        model.addAttribute("jogos", jogoService.listarComResumo());
+        model.addAttribute("loterias", Arrays.stream(Loteria.values()).map(Loteria::nome).toList());
+        model.addAttribute("abaAtiva", "jogos");
+        return "jogos";
+    }
+
+    @GetMapping("/jogos/{id}")
+    public String jogo(@PathVariable String id, Model model) {
+        ConferenciaJogo conferencia = jogoService.conferir(id);
+        model.addAttribute("conferencia", conferencia);
+        model.addAttribute("abaAtiva", "jogos");
+        return "jogo";
+    }
+
+    @GetMapping("/ml")
+    public String machineLearning(Model model) {
+        model.addAttribute("abaAtiva", "ml");
+        return "ml";
     }
 }
