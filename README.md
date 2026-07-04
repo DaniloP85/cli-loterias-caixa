@@ -1,250 +1,95 @@
-# Loterias Caixa - Download Automatizado
+# Loterias Caixa — monólito web
 
-Sistema automatizado para download de todas as loterias da Caixa Econômica Federal usando Docker.
+Aplicação Spring Boot (web + JSP) que importa resultados das loterias da Caixa Econômica Federal para o MongoDB, calcula features estatísticas por concurso e expõe tudo via API REST e páginas web — pensada como base de estudo de machine learning com os números das loterias.
+
+## 🎲 Loterias suportadas
+
+- Mega-Sena (`megasena`)
+- Lotofácil (`lotofacil`)
+- Quina (`quina`)
+- Lotomania (`lotomania`)
 
 ## 📋 Pré-requisitos
 
-- Docker
-- Docker Compose
-- Arquivo JAR compilado:  `target/cli-loterias-caixa-1.5-SNAPSHOT.jar`
+- Docker + Docker Compose (recomendado), ou
+- JDK 17+, Maven e um MongoDB acessível
 
 ## 🚀 Como usar
 
-### Opção 1: Usando Docker Compose (Recomendado)
-
-# 1. Compilar o projeto Java (se ainda não compilou)
-
-```bash
-mvn clean package
-```
-
-# 2. Construir e executar os containers
-
-```bash
-docker-compose up --build
-```
-
-# 3. Para executar em background
+### Opção 1: Docker Compose (recomendado)
 
 ```bash
 docker-compose up -d --build
 ```
 
-# 4. Ver logs
-```bash
-docker-compose logs -f loterias-downloader
-```
-
-# 5. Parar os containers
-```bash
-docker-compose down
-```
-
-### Opção 2: Usando Docker diretamente
-
-# 1. Construir a imagem
-```bash
-docker build -t loterias-caixa: latest .
-```
-
-# 2. Executar o container
+Sobe o MongoDB e a aplicação em `http://localhost:8080`.
 
 ```bash
-docker run --name loterias-downloader loterias-caixa:latest
+docker-compose logs -f loterias-web   # logs
+docker-compose down                   # parar
 ```
 
-# 3. Ver logs
+### Opção 2: local
 
 ```bash
-docker logs -f loterias-downloader
+mvn clean package                     # gera target/loterias-caixa.war
+java -jar target/loterias-caixa.war   # WAR executável (Tomcat embutido)
 ```
 
-### Opção 3: Executar uma loteria específica
+> O empacotamento é **WAR** (não JAR) porque JSP exige isso no Spring Boot. O WAR continua executável com `java -jar`.
 
-# Sobrescrever o entrypoint para executar apenas uma loteria
+## 🌐 Páginas
+
+| Página | URL |
+|---|---|
+| Home (cards das loterias + botão importar) | `/` |
+| Concursos (tabela paginada) | `/loterias/{loteria}` |
+| Detalhe do concurso + features | `/loterias/{loteria}/concursos/{numero}` |
+| Dashboard (frequência das dezenas, médias) | `/loterias/{loteria}/dashboard` |
+
+## 🔌 API REST
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/api/loterias/{loteria}/importacao?completo=false` | Dispara a importação em background (202). `completo=true` apaga e reimporta tudo; sem ele, retoma do último concurso salvo. |
+| GET | `/api/loterias/{loteria}/importacao/status` | Progresso da importação (estado, processados, total, percentual). |
+| GET | `/api/loterias/{loteria}/concursos?page=0&size=20` | Concursos paginados (mais recentes primeiro). |
+| GET | `/api/loterias/{loteria}/concursos/{numero}` | Um concurso com as features estatísticas. |
+| GET | `/api/loterias/{loteria}/estatisticas` | Agregações: frequência de cada dezena e médias das features. |
+| GET | `/api/loterias/{loteria}/export?formato=csv` | Dataset flat para ML (`csv` ou `json`): `concurso, data, n1..nK, soma, media, desvio_padrao, log_produto, pares, impares, baixos, altos`. |
+
+Exemplo de fluxo:
+
 ```bash
-docker run --rm loterias-caixa:latest \
-  bash -c "java -jar /app/cli-loterias-caixa.jar -l quina"
+curl -X POST localhost:8080/api/loterias/lotofacil/importacao
+curl localhost:8080/api/loterias/lotofacil/importacao/status
+curl -o lotofacil.csv "localhost:8080/api/loterias/lotofacil/export?formato=csv"
 ```
 
-## 🎲 Loterias suportadas
-
-O script processa automaticamente as seguintes loterias:
-
-1.  Mega-Sena
-2. Quina
-3. Lotofácil
-4. Lotomania
-5. Timemania
-6. Dupla Sena
-7. Federal
-8. Mais Milionaria
-9. Dia de Sorte
-10. Super Sete
-
-## 📊 Estrutura do projeto
-
-```
-.
-├── Dockerfile                          # Imagem Docker com Java 17
-├── docker-compose.yml                  # Orquestração com MongoDB
-├── run-all-loterias. sh                # Script de execução das loterias
-├── target/
-│   └── cli-loterias-caixa-1.5-SNAPSHOT.jar
-└── downloads/                          # Arquivos baixados (volume)
-```
+O CSV cai direto num `pandas.read_csv('lotofacil.csv')` para começar o estudo de ML.
 
 ## 🔧 Configuração
 
-### Variáveis de ambiente (MongoDB)
+Conexão com o MongoDB via variáveis de ambiente (defaults em `application.properties`):
 
-Edite o `docker-compose.yml` para alterar as credenciais:
+| Variável | Default |
+|---|---|
+| `MONGODB_HOST` | `localhost` |
+| `MONGODB_PORT` | `27017` |
+| `MONGODB_DATABASE` | `loterias` |
+| `MONGODB_USERNAME` | `admin` |
+| `MONGODB_PASSWORD` | `loterias123` |
 
-```yaml
-environment:
-  - MONGODB_HOST=mongodb
-  - MONGODB_PORT=27017
-  - MONGODB_DATABASE=loterias
-  - MONGODB_USERNAME=admin
-  - MONGODB_PASSWORD=loterias123  # Altere para uma senha segura! 
-```
+O `docker-compose.yaml` já aponta a aplicação para o serviço `mongodb`.
 
-### Ajustar intervalo entre downloads
+### Certificado TLS da Caixa
 
-No arquivo `run-all-loterias.sh`, linha 52:
-
-```bash
-sleep 2  # Pausa de 2 segundos entre cada loteria
-```
-
-## 📝 Logs
-
-O script exibe um relatório completo:
-
-```
-==========================================
-Iniciando download de todas as loterias
-Data: 2025-12-08 10:30:00
-==========================================
-
-----------------------------------------
-[1/10] Processando: megasena
-----------------------------------------
-✓ megasena processada com sucesso!
-
-... 
-
-==========================================
-Processamento finalizado!
-==========================================
-Total de loterias: 10
-Sucesso: 10
-Erros: 0
-Data final: 2025-12-08 10:32:15
-==========================================
-```
-
-## 🐳 Publicar no Docker Hub
-
-# 1. Login no Docker Hub
-```bash
-docker login
-```
-
-```bash
-docker build -t loterias-caixa .
-```
-
-
-```bash
-docker tag 1.0 danilo85/loterias-caixa:1.0
-```
-
-# 2. Tag da imagem
-
-```bash
-docker tag 1.0 danilo85/loterias-caixa:1.0
-```
-
-# 3. Push para o Docker Hub
-
-```bash
-docker push danilo85/loterias-caixa:1.0
-```
-
-Depois você pode usar diretamente do Docker Hub:
-
-```bash
-docker pull danilo85/loterias-caixa:latest
-```
-
-```bash
-docker run danilo85/loterias-caixa:latest
-```
-
-## 🌩️ Deploy na AWS
-
-### EC2 com Docker
-
-```bash
-# 1. Conectar na instância EC2
-ssh -i sua-chave. pem ec2-user@seu-ip
-
-# 2. Instalar Docker
-sudo yum update -y
-sudo yum install -y docker
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-
-# 3. Instalar Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# 4. Clonar o repositório ou copiar os arquivos
-# Depois executar: 
-docker-compose up -d
-```
-
-## 📅 Agendar execução periódica
-
-### Usar cron (Linux)
-
-```bash
-# Editar crontab
-crontab -e
-
-# Executar todos os dias às 2h da manhã
-0 2 * * * cd /caminho/do/projeto && docker-compose up
-
-# Executar a cada 6 horas
-0 */6 * * * cd /caminho/do/projeto && docker-compose up
-```
+O certificado da API da Caixa não é confiado pelo truststore padrão da JVM. No build da imagem Docker, o `install-caixa-cert.sh` baixa e importa o certificado no `cacerts`. Rodando fora do Docker, execute o script manualmente uma vez (requer `openssl` e `keytool`).
 
 ## 🆘 Troubleshooting
 
-### Container falha ao iniciar
-
-#### Ver logs detalhados
-
 ```bash
-docker-compose logs loterias-downloader
-```
-
-#### Verificar se o JAR existe
-
-```bash
-docker run --rm loterias-caixa ls -la /app/
-```
-
-### MongoDB não conecta
-
-#### Verificar se o MongoDB está rodando
-```bash
-docker-compose ps
-```
-
-#### Testar conexão
-
-```bash
-docker exec -it loterias-mongodb mongosh -u admin -p loterias123
+docker-compose ps                                          # serviços no ar?
+docker-compose logs loterias-web                           # logs da aplicação
+docker exec -it loterias-mongodb mongosh -u admin -p loterias123   # testar o Mongo
 ```

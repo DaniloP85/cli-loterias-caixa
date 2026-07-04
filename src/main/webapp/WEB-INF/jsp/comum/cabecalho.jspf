@@ -1,0 +1,21 @@
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><c:out value="${titulo}" default="Loterias Caixa"/></title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+<nav>
+    <a href="/" class="marca">🎲 Loterias Caixa</a>
+    <c:if test="${not empty loteria}">
+        <a href="/loterias/${loteria}">Concursos</a>
+        <a href="/loterias/${loteria}/dashboard">Dashboard</a>
+        <a href="/api/loterias/${loteria}/export?formato=csv">Exportar CSV</a>
+    </c:if>
+</nav>
+<main>

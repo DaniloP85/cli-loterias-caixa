@@ -1,8 +1,10 @@
 package br.com.dpsnqmk.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.io.Serializable;
@@ -11,8 +13,12 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@NoArgsConstructor
+@Document(collection = "resultados")
 public class ConcursoMongoDTO implements Serializable {
+
+    @Id
+    private String id;
 
     @Field(name = "concurso")
     private int concurso;
@@ -31,4 +37,18 @@ public class ConcursoMongoDTO implements Serializable {
 
     @Field(name = "historial")
     private FeaturesDTO historial;
+
+    public ConcursoMongoDTO(int concurso,
+                            String loteria,
+                            List<Integer> numerosSorteados,
+                            Date dataSorteio,
+                            String status,
+                            FeaturesDTO historial) {
+        this.concurso = concurso;
+        this.loteria = loteria;
+        this.numerosSorteados = numerosSorteados;
+        this.dataSorteio = dataSorteio;
+        this.status = status;
+        this.historial = historial;
+    }
 }

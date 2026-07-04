@@ -1,24 +1,21 @@
 package br.com.dpsnqmk;
 
-import br.com.dpsnqmk.component.LoteriasCLI;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import picocli.CommandLine;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.retry.annotation.EnableRetry;
 
 @SpringBootApplication
-public class MainApplication {
+@EnableRetry
+public class MainApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(MainApplication.class, args);
     }
 
-    @Bean
-    CommandLineRunner commandLineRunner(LoteriasCLI loteriasCLI) {
-        return args -> {
-            new CommandLine(loteriasCLI).execute(args);
-            System.exit(0);  // Encerra após execução
-        };
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(MainApplication.class);
     }
 }

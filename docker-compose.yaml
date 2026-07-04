@@ -30,24 +30,24 @@ services:
     networks:
       - loterias-network
 
-#  loterias-downloader:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: loterias-downloader
-#    depends_on:
-#      - mongodb
-#    environment:
-#      - MONGODB_HOST=mongodb
-#      - MONGODB_PORT=27017
-#      - MONGODB_DATABASE=loterias
-#      - MONGODB_USERNAME=admin
-#      - MONGODB_PASSWORD=loterias123
-#    volumes:
-#      # Se você quiser salvar os arquivos baixados localmente
-#      - ./downloads:/app/downloads
-#    networks:
-#      - loterias-network
+  loterias-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loterias-web
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=loterias
+      - MONGODB_USERNAME=admin
+      - MONGODB_PASSWORD=loterias123
+    networks:
+      - loterias-network
 
 volumes:
   postgres_data:
