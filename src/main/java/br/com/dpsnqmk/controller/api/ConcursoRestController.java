@@ -22,10 +22,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -86,24 +85,22 @@ public class ConcursoRestController {
         return estatisticaService.estatisticas(loteria);
     }
 
+    @GetMapping(value = "/export", params = "formato=json")
+    public List<LinhaDataset> exportJson(@PathVariable Loteria loteria) {
+        return datasetService.dataset(loteria);
+    }
+
     @GetMapping("/export")
-    public ResponseEntity<?> export(@PathVariable Loteria loteria,
-                                    @RequestParam(defaultValue = "csv") String formato) {
+    public ResponseEntity<byte[]> exportCsv(@PathVariable Loteria loteria) throws IOException {
         List<LinhaDataset> linhas = datasetService.dataset(loteria);
 
-        if ("json".equalsIgnoreCase(formato)) {
-            return ResponseEntity.ok(linhas);
-        }
+        StringWriter writer = new StringWriter();
+        datasetService.escreverCsv(linhas, writer);
 
-        StreamingResponseBody corpo = out -> {
-            Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-            datasetService.escreverCsv(linhas, writer);
-            writer.flush();
-        };
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + loteria.nome() + "-dataset.csv\"")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(corpo);
+                .body(writer.toString().getBytes(StandardCharsets.UTF_8));
     }
 }
