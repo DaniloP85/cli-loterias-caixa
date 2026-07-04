@@ -1,6 +1,7 @@
 package br.com.dpsnqmk.controller.api;
 
 import br.com.dpsnqmk.dto.ConcursoMongoDTO;
+import br.com.dpsnqmk.dto.ConferenciaConcurso;
 import br.com.dpsnqmk.dto.EstatisticasDTO;
 import br.com.dpsnqmk.dto.LinhaDataset;
 import br.com.dpsnqmk.enums.Loteria;
@@ -8,6 +9,7 @@ import br.com.dpsnqmk.repository.ConcursoRepository;
 import br.com.dpsnqmk.service.DatasetService;
 import br.com.dpsnqmk.service.EstatisticaService;
 import br.com.dpsnqmk.service.ImportacaoService;
+import br.com.dpsnqmk.service.JogoService;
 import br.com.dpsnqmk.service.StatusImportacao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,15 +39,18 @@ public class ConcursoRestController {
     private final ImportacaoService importacaoService;
     private final EstatisticaService estatisticaService;
     private final DatasetService datasetService;
+    private final JogoService jogoService;
     private final ConcursoRepository repository;
 
     public ConcursoRestController(ImportacaoService importacaoService,
                                   EstatisticaService estatisticaService,
                                   DatasetService datasetService,
+                                  JogoService jogoService,
                                   ConcursoRepository repository) {
         this.importacaoService = importacaoService;
         this.estatisticaService = estatisticaService;
         this.datasetService = datasetService;
+        this.jogoService = jogoService;
         this.repository = repository;
     }
 
@@ -84,6 +89,13 @@ public class ConcursoRestController {
     public ConcursoMongoDTO concurso(@PathVariable Loteria loteria, @PathVariable int numero) {
         return repository.findByLoteriaAndConcurso(loteria.nome(), numero)
                 .orElseThrow(() -> new ConcursoNaoEncontradoException(loteria.nome(), numero));
+    }
+
+    @GetMapping("/concursos/{numero}/conferencia")
+    public ConferenciaConcurso conferencia(@PathVariable Loteria loteria,
+                                           @PathVariable int numero,
+                                           @RequestParam List<Integer> dezenas) {
+        return jogoService.conferirAvulso(loteria, numero, dezenas);
     }
 
     @GetMapping("/estatisticas")

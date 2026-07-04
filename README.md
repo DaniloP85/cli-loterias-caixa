@@ -67,6 +67,7 @@ Na aba Manutenção, **Atualizar** importa só o que falta (compara o último co
 | DELETE | `/api/jogos/{id}` | Remove o jogo (204). |
 | GET | `/api/loterias/{loteria}/concursos?page=0&size=20` | Concursos paginados (mais recentes primeiro). |
 | GET | `/api/loterias/{loteria}/concursos/{numero}` | Um concurso com as features estatísticas. |
+| GET | `/api/loterias/{loteria}/concursos/{numero}/conferencia?dezenas=1,2,3` | Confere dezenas apostadas contra um sorteio: retorna dezenas acertadas, contagem e se premiou. |
 | GET | `/api/loterias/{loteria}/estatisticas` | Agregações: frequência de cada dezena e médias das features. |
 | GET | `/api/loterias/{loteria}/export?formato=csv` | Dataset flat para ML (`csv` ou `json`): `concurso, data, n1..nK, soma, media, desvio_padrao, log_produto, pares, impares, baixos, altos`. |
 

@@ -10,7 +10,15 @@
             <h2>${card.nome}</h2>
             <p class="numero-grande" id="total-${card.nome}">${card.totalConcursos}</p>
             <p>concursos na base</p>
-            <p class="estado" id="estado-${card.nome}">importação: ${card.estadoImportacao}</p>
+            <p class="estado" id="estado-${card.nome}">
+                <c:choose>
+                    <c:when test="${card.totalConcursos > 0}">
+                        base atualizada até o concurso ${card.ultimoConcurso}
+                        — sorteio de <fmt:formatDate value="${card.dataUltimoConcurso}" pattern="dd/MM/yyyy"/>
+                    </c:when>
+                    <c:otherwise>nenhum concurso importado ainda</c:otherwise>
+                </c:choose>
+            </p>
             <div class="progresso" id="progresso-${card.nome}" hidden>
                 <div class="progresso-barra">
                     <div class="progresso-preenchido" id="barra-${card.nome}"></div>
@@ -69,7 +77,7 @@
             document.getElementById('total-' + loteria).textContent = status.processados;
         } else if (status.estado === 'CONCLUIDO') {
             progresso.hidden = true;
-            estado.textContent = 'importação: CONCLUIDO';
+            estado.textContent = 'base atualizada até o concurso ' + status.total;
             document.getElementById('total-' + loteria).textContent = status.total;
         } else if (status.estado === 'ERRO') {
             progresso.hidden = true;

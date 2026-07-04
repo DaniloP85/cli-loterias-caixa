@@ -72,8 +72,45 @@
                     <span class="badge pendente" title="pendentes">&#8987; ${item.resumo.pendentes}</span>
                 </td>
                 <td>
-                    <a class="botao" href="/jogos/${item.jogo.id}">conferir</a>
                     <button class="botao perigo" onclick="excluir('${item.jogo.id}')">excluir</button>
+                </td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
+</c:if>
+
+<c:if test="${not empty resultados}">
+    <h2>Resultados dos sorteios</h2>
+    <p class="legenda-cores">
+        <span><span class="dezena acertada">07</span> dezena jogada e acertada</span>
+        <span><span class="dezena">02</span> dezena jogada, não saiu no sorteio</span>
+    </p>
+    <table>
+        <thead>
+        <tr>
+            <th>Loteria</th>
+            <th>Concurso</th>
+            <th>Apuração</th>
+            <th>Dezenas jogadas (acertos destacados)</th>
+            <th>Acertos</th>
+        </tr>
+        </thead>
+        <tbody>
+        <c:forEach var="item" items="${resultados}">
+            <tr>
+                <td>${item.loteria}</td>
+                <td>${item.concurso}</td>
+                <td><fmt:formatDate value="${item.dataSorteio}" pattern="dd/MM/yyyy"/></td>
+                <td>
+                    <c:forEach var="numero" items="${item.numerosJogados}">
+                        <span class="dezena ${item.dezenasAcertadas.contains(numero) ? 'acertada' : ''}">${numero}</span>
+                    </c:forEach>
+                </td>
+                <td>
+                    <span class="badge ${item.premiado ? 'premiado' : 'comum'}">${item.acertos}
+                        <c:choose><c:when test="${item.acertos == 1}">acerto</c:when><c:otherwise>acertos</c:otherwise></c:choose>
+                    </span>
                 </td>
             </tr>
         </c:forEach>

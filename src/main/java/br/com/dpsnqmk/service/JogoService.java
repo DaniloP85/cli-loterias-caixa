@@ -1,11 +1,13 @@
 package br.com.dpsnqmk.service;
 
+import br.com.dpsnqmk.controller.api.ConcursoNaoEncontradoException;
 import br.com.dpsnqmk.controller.api.JogoNaoEncontradoException;
 import br.com.dpsnqmk.dto.ConcursoMongoDTO;
 import br.com.dpsnqmk.dto.ConferenciaConcurso;
 import br.com.dpsnqmk.dto.ConferenciaJogo;
 import br.com.dpsnqmk.dto.JogoComResumo;
 import br.com.dpsnqmk.dto.JogoMongoDTO;
+import br.com.dpsnqmk.dto.ResultadoSorteio;
 import br.com.dpsnqmk.dto.ResumoJogo;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.repository.ConcursoRepository;
@@ -13,6 +15,7 @@ import br.com.dpsnqmk.repository.JogoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -35,19 +38,7 @@ public class JogoService {
                               Integer concursoInicial, Integer quantidadeConcursos, String descricao) {
         Loteria loteria = Loteria.from(loteriaNome);
 
-        if (numeros == null || numeros.isEmpty()) {
-            throw new IllegalArgumentException("Informe as dezenas do jogo");
-        }
-        TreeSet<Integer> dezenas = new TreeSet<>(numeros);
-        if (dezenas.size() != numeros.size()) {
-            throw new IllegalArgumentException("Há dezenas repetidas no jogo");
-        }
-        for (int dezena : dezenas) {
-            if (dezena < loteria.getMin() || dezena > loteria.getMax()) {
-                throw new IllegalArgumentException("Dezena " + dezena + " fora do intervalo da "
-                        + loteria.nome() + " (" + loteria.getMin() + " a " + loteria.getMax() + ")");
-            }
-        }
+        TreeSet<Integer> dezenas = validarDezenas(loteria, numeros);
         if (dezenas.size() < loteria.getMinDezenas() || dezenas.size() > loteria.getMaxDezenas()) {
             throw new IllegalArgumentException("A " + loteria.nome() + " aceita de "
                     + loteria.getMinDezenas() + " a " + loteria.getMaxDezenas()
@@ -63,6 +54,55 @@ public class JogoService {
         JogoMongoDTO jogo = new JogoMongoDTO(loteria.nome(), List.copyOf(dezenas),
                 concursoInicial, quantidadeConcursos, descricao, new Date());
         return jogoRepository.save(jogo);
+    }
+
+    private TreeSet<Integer> validarDezenas(Loteria loteria, List<Integer> numeros) {
+        if (numeros == null || numeros.isEmpty()) {
+            throw new IllegalArgumentException("Informe as dezenas do jogo");
+        }
+        TreeSet<Integer> dezenas = new TreeSet<>(numeros);
+        if (dezenas.size() != numeros.size()) {
+            throw new IllegalArgumentException("Há dezenas repetidas no jogo");
+        }
+        for (int dezena : dezenas) {
+            if (dezena < loteria.getMin() || dezena > loteria.getMax()) {
+                throw new IllegalArgumentException("Dezena " + dezena + " fora do intervalo da "
+                        + loteria.nome() + " (" + loteria.getMin() + " a " + loteria.getMax() + ")");
+            }
+        }
+        return dezenas;
+    }
+
+    /** Conferência avulsa: interseção das dezenas apostadas com um sorteio já importado. */
+    public ConferenciaConcurso conferirAvulso(Loteria loteria, int numeroConcurso, List<Integer> numeros) {
+        List<Integer> dezenas = List.copyOf(validarDezenas(loteria, numeros));
+        ConcursoMongoDTO resultado = concursoRepository
+                .findByLoteriaAndConcurso(loteria.nome(), numeroConcurso)
+                .orElseThrow(() -> new ConcursoNaoEncontradoException(loteria.nome(), numeroConcurso));
+        return conferirContra(resultado, dezenas, loteria);
+    }
+
+    /** Uma linha por sorteio já realizado de cada jogo cadastrado, mais recente primeiro. */
+    public List<ResultadoSorteio> resultadosSorteios() {
+        List<ResultadoSorteio> resultados = new ArrayList<>();
+        for (JogoMongoDTO jogo : jogoRepository.findAll()) {
+            for (ConferenciaConcurso conferencia : conferirConcursos(jogo)) {
+                if (ConferenciaConcurso.PENDENTE.equals(conferencia.getSituacao())) {
+                    continue;
+                }
+                resultados.add(new ResultadoSorteio(
+                        jogo.getLoteria(),
+                        conferencia.getConcurso(),
+                        conferencia.getDataSorteio(),
+                        jogo.getNumeros(),
+                        conferencia.getDezenasAcertadas(),
+                        conferencia.getAcertos(),
+                        ConferenciaConcurso.PREMIADO.equals(conferencia.getSituacao()),
+                        jogo.getDescricao()));
+            }
+        }
+        resultados.sort(Comparator.comparing(ResultadoSorteio::getDataSorteio).reversed());
+        return resultados;
     }
 
     public List<JogoComResumo> listarComResumo() {
@@ -96,20 +136,23 @@ public class JogoService {
         List<ConferenciaConcurso> conferencia = new ArrayList<>();
         for (int numero = jogo.getConcursoInicial(); numero <= jogo.getConcursoFinal(); numero++) {
             ConcursoMongoDTO resultado = resultadosPorConcurso.get(numero);
-            if (resultado == null) {
-                conferencia.add(ConferenciaConcurso.pendente(numero));
-                continue;
-            }
-            List<Integer> acertadas = resultado.getNumerosSorteados().stream()
-                    .filter(jogo.getNumeros()::contains)
-                    .toList();
-            String situacao = loteria.premiado(acertadas.size())
-                    ? ConferenciaConcurso.PREMIADO
-                    : ConferenciaConcurso.NAO_PREMIADO;
-            conferencia.add(new ConferenciaConcurso(numero, resultado.getDataSorteio(),
-                    resultado.getNumerosSorteados(), acertadas, acertadas.size(), situacao));
+            conferencia.add(resultado == null
+                    ? ConferenciaConcurso.pendente(numero)
+                    : conferirContra(resultado, jogo.getNumeros(), loteria));
         }
         return conferencia;
+    }
+
+    private ConferenciaConcurso conferirContra(ConcursoMongoDTO resultado, List<Integer> numerosJogados,
+                                               Loteria loteria) {
+        List<Integer> acertadas = resultado.getNumerosSorteados().stream()
+                .filter(numerosJogados::contains)
+                .toList();
+        String situacao = loteria.premiado(acertadas.size())
+                ? ConferenciaConcurso.PREMIADO
+                : ConferenciaConcurso.NAO_PREMIADO;
+        return new ConferenciaConcurso(resultado.getConcurso(), resultado.getDataSorteio(),
+                resultado.getNumerosSorteados(), acertadas, acertadas.size(), situacao);
     }
 
     private ResumoJogo resumo(List<ConferenciaConcurso> concursos) {

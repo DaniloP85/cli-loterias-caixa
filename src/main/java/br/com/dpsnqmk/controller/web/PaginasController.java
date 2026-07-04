@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -48,6 +49,8 @@ public class PaginasController {
         private final String nome;
         private final long totalConcursos;
         private final String estadoImportacao;
+        private final int ultimoConcurso;
+        private final Date dataUltimoConcurso;
     }
 
     /** Configuração de cada loteria para o volante de cadastro de jogos. */
@@ -64,10 +67,17 @@ public class PaginasController {
     @GetMapping("/")
     public String home(Model model) {
         List<CardLoteria> cards = Arrays.stream(Loteria.values())
-                .map(loteria -> new CardLoteria(
-                        loteria.nome(),
-                        repository.countByLoteria(loteria.nome()),
-                        importacaoService.status(loteria).getEstado().name()))
+                .map(loteria -> {
+                    ConcursoMongoDTO ultimo = repository
+                            .findTopByLoteriaOrderByConcursoDesc(loteria.nome())
+                            .orElse(null);
+                    return new CardLoteria(
+                            loteria.nome(),
+                            repository.countByLoteria(loteria.nome()),
+                            importacaoService.status(loteria).getEstado().name(),
+                            ultimo == null ? 0 : ultimo.getConcurso(),
+                            ultimo == null ? null : ultimo.getDataSorteio());
+                })
                 .toList();
         model.addAttribute("cards", cards);
         model.addAttribute("abaAtiva", "manutencao");
@@ -115,6 +125,7 @@ public class PaginasController {
                         loteria.getMinDezenas(), loteria.getMaxDezenas()))
                 .toList();
         model.addAttribute("jogos", jogoService.listarComResumo());
+        model.addAttribute("resultados", jogoService.resultadosSorteios());
         model.addAttribute("loterias", loterias);
         model.addAttribute("abaAtiva", "jogos");
         return "jogos";
