@@ -1,30 +1,29 @@
-FROM maven:3.8.1-openjdk-17-slim AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
-# Instalar ferramentas necessárias
-# RUN apk add --no-cache bash openssl ca-certificates
-
-# Criar diretório de trabalho
 WORKDIR /app
 
 # Copiar arquivos do Maven primeiro (melhor uso de cache)
 COPY pom.xml .
 COPY src ./src
 
-# Buildar a aplicação
+# Buildar a aplicação (WAR executável)
 RUN mvn clean package -DskipTests
 
-# Copiar o JAR da aplicação
-COPY target/*.jar /app/loterias-caixa.jar
+FROM eclipse-temurin:17-jre AS runtime
 
-# Copiar scripts
-COPY run-all-loterias.sh /app/run-all-loterias.sh
+WORKDIR /app
+
+# openssl é usado pelo install-caixa-cert.sh para baixar o certificado
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/loterias-caixa.war /app/loterias-caixa.war
+
+# Baixar e instalar o certificado da Caixa no truststore da JVM
 COPY install-caixa-cert.sh /app/install-caixa-cert.sh
+RUN chmod +x /app/install-caixa-cert.sh && /app/install-caixa-cert.sh
 
-# Dar permissão de execução aos scripts
-RUN chmod +x /app/run-all-loterias.sh /app/install-caixa-cert.sh
+EXPOSE 8080
 
-# Baixar e instalar o certificado da Caixa
-RUN /app/install-caixa-cert.sh
-
-# Definir o script como entrypoint
-ENTRYPOINT ["/app/run-all-loterias.sh"]
+ENTRYPOINT ["java", "-jar", "/app/loterias-caixa.war"]

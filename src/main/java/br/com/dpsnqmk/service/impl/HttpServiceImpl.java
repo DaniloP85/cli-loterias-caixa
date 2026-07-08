@@ -2,10 +2,7 @@ package br.com.dpsnqmk.service.impl;
 
 import br.com.dpsnqmk.dto.ConcursoDTO;
 import br.com.dpsnqmk.service.HttpService;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -18,39 +15,11 @@ public class HttpServiceImpl implements HttpService {
 
     @Override
     @Retryable(
-            value = { HttpServerErrorException.class }, // Rechama para erros do servidor (5xx)
-            maxAttempts = 5, // Tenta até 3 vezes
-            backoff = @Backoff(delay = 500, multiplier = 2) // 1s, depois 2s, depois 4s...
+            retryFor = HttpServerErrorException.class, // erros do servidor (5xx)
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 500, multiplier = 2)
     )
     public ConcursoDTO recuperarConcurso(String url) {
-        try {
-            ResponseEntity<ConcursoDTO> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    ConcursoDTO.class
-            );
-
-            return response.getBody();
-        } catch (HttpServerErrorException e) {
-            int statusCode = e.getStatusCode().value();
-
-            if (statusCode > 400) {
-                System.err.println("Erro 502 - Bad Gateway");
-                // Faça algo específico para 502
-            }
-            else if (statusCode == 503) {
-                System.err.println("Erro 503 - Service Unavailable");
-                // Faça algo específico para 503
-            }
-
-            throw e; // Repropaga a exceção para o @Retryable ou @Recover
-        }
-    }
-
-    @Recover
-    public String recover(HttpServerErrorException e, String url) {
-        System.out.println("Recuperando após falhas ao acessar: " + url);
-        return "Falha ao acessar o serviço. Tente novamente mais tarde.";
+        return restTemplate.getForObject(url, ConcursoDTO.class);
     }
 }
