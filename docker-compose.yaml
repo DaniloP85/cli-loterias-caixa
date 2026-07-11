@@ -1,19 +1,4 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: postgres
-    restart: always
-    environment:
-      POSTGRES_USER: billing_user
-      POSTGRES_PASSWORD: together!234
-      POSTGRES_DB: billing_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   mongodb:
     image: mongo:7.0
     container_name: loterias-mongodb
@@ -27,6 +12,11 @@ services:
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - loterias-network
 
@@ -37,7 +27,8 @@ services:
     container_name: loterias-web
     restart: unless-stopped
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -46,12 +37,12 @@ services:
       - MONGODB_DATABASE=loterias
       - MONGODB_USERNAME=admin
       - MONGODB_PASSWORD=loterias123
+      # Troque para o servicebus3 (atualiza o resultado do dia mais rápido, porém menos estável):
+      # - CAIXA_API_BASE_URL=https://servicebus3.caixa.gov.br/portaldeloterias/api/
     networks:
       - loterias-network
 
 volumes:
-  postgres_data:
-    driver: local
   mongodb_data:
     driver: local
   mongodb_config:

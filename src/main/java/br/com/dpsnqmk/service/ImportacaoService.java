@@ -9,6 +9,7 @@ import br.com.dpsnqmk.records.ParesImparesFeature;
 import br.com.dpsnqmk.repository.ConcursoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -28,10 +29,9 @@ import static br.com.dpsnqmk.utility.MyMath.*;
 @Service
 public class ImportacaoService {
 
-    public static final String URL_BASE = "https://servicebus3.caixa.gov.br/portaldeloterias/api/";
-
     private static final Logger LOG = LoggerFactory.getLogger(ImportacaoService.class);
 
+    private final String urlBase;
     private final HttpService httpService;
     private final ConcursoRepository repository;
     private static final long SSE_TIMEOUT_MS = 30L * 60 * 1000;
@@ -40,7 +40,10 @@ public class ImportacaoService {
     private final Map<Loteria, StatusImportacao> statusPorLoteria = new ConcurrentHashMap<>();
     private final Map<Loteria, CopyOnWriteArrayList<SseEmitter>> emittersPorLoteria = new ConcurrentHashMap<>();
 
-    public ImportacaoService(HttpService httpService, ConcursoRepository repository) {
+    public ImportacaoService(@Value("${caixa.api.base-url}") String urlBase,
+                             HttpService httpService,
+                             ConcursoRepository repository) {
+        this.urlBase = urlBase;
         this.httpService = httpService;
         this.repository = repository;
     }
@@ -125,14 +128,14 @@ public class ImportacaoService {
                     .map(ConcursoMongoDTO::getConcurso)
                     .orElse(0);
 
-            int ultimoConcurso = httpService.recuperarConcurso(URL_BASE + nome + "/").getNumero();
+            int ultimoConcurso = httpService.recuperarConcurso(urlBase + nome + "/").getNumero();
             status.progresso(ultimoImportado, ultimoConcurso);
             publicar(loteria, status);
             LOG.info("importando {}: concursos {} a {}", nome, ultimoImportado + 1, ultimoConcurso);
 
             SimpleDateFormat formatoData = new SimpleDateFormat("dd/MM/yyyy");
             for (int concurso = ultimoImportado + 1; concurso <= ultimoConcurso; concurso++) {
-                ConcursoDTO concursoDTO = httpService.recuperarConcurso(URL_BASE + nome + "/" + concurso);
+                ConcursoDTO concursoDTO = httpService.recuperarConcurso(urlBase + nome + "/" + concurso);
                 repository.save(converter(concursoDTO, loteria, formatoData));
                 status.progresso(concurso, ultimoConcurso);
                 publicar(loteria, status);
