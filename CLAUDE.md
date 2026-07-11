@@ -18,7 +18,7 @@ java -jar target/loterias-caixa.war  # executable WAR, serves http://localhost:8
 Docker (bundles MongoDB):
 
 ```bash
-docker-compose up -d --build         # app on :8080 + mongodb (+ postgres, unrelated/unused)
+docker-compose up -d --build         # app on :8080 + mongodb
 docker-compose logs -f loterias-web
 ```
 
@@ -56,9 +56,13 @@ Single Spring Boot app (`MainApplication`, extends `SpringBootServletInitializer
 
 `application.properties` reads `MONGODB_HOST/PORT/DATABASE/USERNAME/PASSWORD` env vars with localhost defaults; `docker-compose.yaml` points the app at the `mongodb` service. Credentials are placeholders, not real secrets.
 
+### Caixa API base URL
+
+`caixa.api.base-url` (env `CAIXA_API_BASE_URL`) selects the API host, injected into `ImportacaoService`. Default is `servicebus2.caixa.gov.br` (more stable); `servicebus3.caixa.gov.br` publishes the day's result faster but errors more often — switch by uncommenting the env var in `docker-compose.yaml`.
+
 ### Caixa API TLS certificate
 
-The Caixa API's certificate isn't trusted by the default JVM truststore. `install-caixa-cert.sh` downloads and imports it into `$JAVA_HOME/lib/security/cacerts`; it runs at Docker image build time. When running outside Docker, run it manually once before importing.
+The Caixa API's certificate isn't trusted by the default JVM truststore. `install-caixa-cert.sh` downloads the certs of both `servicebus2` and `servicebus3` and imports them into `$JAVA_HOME/lib/security/cacerts` (aliases `caixa-servicebus2`/`caixa-servicebus3`); it runs at Docker image build time. When running outside Docker, run it manually once before importing.
 
 ### Logging
 
