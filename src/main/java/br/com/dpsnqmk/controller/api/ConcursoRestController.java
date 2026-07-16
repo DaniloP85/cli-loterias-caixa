@@ -4,12 +4,14 @@ import br.com.dpsnqmk.dto.ConcursoMongoDTO;
 import br.com.dpsnqmk.dto.ConferenciaConcurso;
 import br.com.dpsnqmk.dto.EstatisticasDTO;
 import br.com.dpsnqmk.dto.LinhaDataset;
+import br.com.dpsnqmk.dto.PrecoAposta;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.repository.ConcursoRepository;
 import br.com.dpsnqmk.service.DatasetService;
 import br.com.dpsnqmk.service.EstatisticaService;
 import br.com.dpsnqmk.service.ImportacaoService;
 import br.com.dpsnqmk.service.JogoService;
+import br.com.dpsnqmk.service.PremioService;
 import br.com.dpsnqmk.service.StatusImportacao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,17 +42,20 @@ public class ConcursoRestController {
     private final EstatisticaService estatisticaService;
     private final DatasetService datasetService;
     private final JogoService jogoService;
+    private final PremioService premioService;
     private final ConcursoRepository repository;
 
     public ConcursoRestController(ImportacaoService importacaoService,
                                   EstatisticaService estatisticaService,
                                   DatasetService datasetService,
                                   JogoService jogoService,
+                                  PremioService premioService,
                                   ConcursoRepository repository) {
         this.importacaoService = importacaoService;
         this.estatisticaService = estatisticaService;
         this.datasetService = datasetService;
         this.jogoService = jogoService;
+        this.premioService = premioService;
         this.repository = repository;
     }
 
@@ -101,6 +106,11 @@ public class ConcursoRestController {
     @GetMapping("/estatisticas")
     public EstatisticasDTO estatisticas(@PathVariable Loteria loteria) {
         return estatisticaService.estatisticas(loteria);
+    }
+
+    @GetMapping("/precos")
+    public List<PrecoAposta> precos(@PathVariable Loteria loteria) {
+        return premioService.tabelaReferencia(loteria);
     }
 
     @GetMapping(value = "/export", params = "formato=json")

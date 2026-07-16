@@ -7,6 +7,7 @@ import br.com.dpsnqmk.dto.ConferenciaConcurso;
 import br.com.dpsnqmk.dto.ConferenciaJogo;
 import br.com.dpsnqmk.dto.JogoComResumo;
 import br.com.dpsnqmk.dto.JogoMongoDTO;
+import br.com.dpsnqmk.dto.PremioFaixa;
 import br.com.dpsnqmk.dto.ResultadoSorteio;
 import br.com.dpsnqmk.dto.ResumoJogo;
 import br.com.dpsnqmk.enums.Loteria;
@@ -28,10 +29,13 @@ public class JogoService {
 
     private final JogoRepository jogoRepository;
     private final ConcursoRepository concursoRepository;
+    private final PremioService premioService;
 
-    public JogoService(JogoRepository jogoRepository, ConcursoRepository concursoRepository) {
+    public JogoService(JogoRepository jogoRepository, ConcursoRepository concursoRepository,
+                        PremioService premioService) {
         this.jogoRepository = jogoRepository;
         this.concursoRepository = concursoRepository;
+        this.premioService = premioService;
     }
 
     public JogoMongoDTO criar(String loteriaNome, List<Integer> numeros,
@@ -98,7 +102,8 @@ public class JogoService {
                         conferencia.getDezenasAcertadas(),
                         conferencia.getAcertos(),
                         true,
-                        jogo.getDescricao()));
+                        jogo.getDescricao(),
+                        conferencia.getPremio()));
             }
         }
         resultados.sort(Comparator.comparing(ResultadoSorteio::getDataSorteio).reversed());
@@ -107,7 +112,8 @@ public class JogoService {
 
     public List<JogoComResumo> listarComResumo() {
         return jogoRepository.findAllByOrderByCriadoEmDesc().stream()
-                .map(jogo -> new JogoComResumo(jogo, resumo(conferirConcursos(jogo))))
+                .map(jogo -> new JogoComResumo(jogo, resumo(conferirConcursos(jogo)),
+                        premioService.custoAposta(Loteria.from(jogo.getLoteria()), jogo.getNumeros().size())))
                 .toList();
     }
 
@@ -148,11 +154,13 @@ public class JogoService {
         List<Integer> acertadas = resultado.getNumerosSorteados().stream()
                 .filter(numerosJogados::contains)
                 .toList();
-        String situacao = loteria.premiado(acertadas.size())
-                ? ConferenciaConcurso.PREMIADO
-                : ConferenciaConcurso.NAO_PREMIADO;
+        boolean premiado = loteria.premiado(acertadas.size());
+        String situacao = premiado ? ConferenciaConcurso.PREMIADO : ConferenciaConcurso.NAO_PREMIADO;
+        PremioFaixa premio = premiado
+                ? premioService.valorPremio(resultado, loteria, acertadas.size())
+                : null;
         return new ConferenciaConcurso(resultado.getConcurso(), resultado.getDataSorteio(),
-                resultado.getNumerosSorteados(), acertadas, acertadas.size(), situacao);
+                resultado.getNumerosSorteados(), acertadas, acertadas.size(), situacao, premio);
     }
 
     private ResumoJogo resumo(List<ConferenciaConcurso> concursos) {

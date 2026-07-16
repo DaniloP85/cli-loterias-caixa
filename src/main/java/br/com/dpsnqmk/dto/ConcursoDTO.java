@@ -43,6 +43,9 @@ public class ConcursoDTO implements Serializable {
     @JsonProperty("listaMunicipioUFGanhadores")
     private List<Object> listaMunicipioUFGanhadores;
 
+    @JsonProperty("listaRateioPremio")
+    private List<RateioPremioDTO> listaRateioPremio;
+
     @JsonProperty("localSorteio")
     private String localSorteio;
 

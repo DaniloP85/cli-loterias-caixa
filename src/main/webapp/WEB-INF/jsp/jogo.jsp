@@ -3,6 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="titulo" value="Conferência — ${conferencia.jogo.loteria}"/>
 <%@ include file="comum/cabecalho.jspf" %>
+<fmt:setLocale value="pt_BR"/>
 
 <h1>${conferencia.jogo.loteria} — conferência do jogo</h1>
 <c:if test="${not empty conferencia.jogo.descricao}">
@@ -40,6 +41,7 @@
         <th>Dezenas sorteadas (acertos destacados)</th>
         <th>Acertos</th>
         <th>Situação</th>
+        <th>Prêmio</th>
     </tr>
     </thead>
     <tbody>
@@ -68,6 +70,13 @@
                     <c:otherwise>
                         <span class="badge pendente">&#8987; pendente</span>
                     </c:otherwise>
+                </c:choose>
+            </td>
+            <td>
+                <c:choose>
+                    <c:when test="${item.premio.status == 'VALOR'}">R$ <fmt:formatNumber value="${item.premio.valor}" minFractionDigits="2" maxFractionDigits="2"/></c:when>
+                    <c:when test="${item.premio.status == 'SEM_GANHADOR'}">não houve ganhador nesta faixa</c:when>
+                    <c:when test="${item.premio.status == 'INDISPONIVEL'}">indisponível no momento</c:when>
                 </c:choose>
             </td>
         </tr>
