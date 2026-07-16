@@ -38,6 +38,14 @@ java -jar target/loterias-caixa.war   # WAR executável (Tomcat embutido)
 
 > O empacotamento é **WAR** (não JAR) porque JSP exige isso no Spring Boot. O WAR continua executável com `java -jar`.
 
+#### Rodando pelo IntelliJ (Run/Debug Configuration)
+
+O `spring-boot-starter-tomcat` (e o Jasper/JSTL) estão em escopo `provided` no `pom.xml` — necessário para o WAR executável. Uma Run/Debug Configuration do tipo **Application** no IntelliJ, por padrão, não inclui dependências `provided` no classpath, o que causa o erro `no ServletWebServerFactory bean defined in the context` ao rodar `MainApplication` direto pela IDE.
+
+Para corrigir: na Run/Debug Configuration, abra **"Modify options"** e habilite **"Add dependencies with 'Provided' scope to classpath"**. Depois disso o Tomcat embutido entra no classpath e a aplicação sobe normalmente.
+
+Além disso, se você copiou as variáveis de ambiente do `docker-compose.yaml` (`MONGODB_HOST=mongodb`), lembre que `mongodb` só é resolvido dentro da rede Docker do compose. Rodando pela IDE (fora do Docker), suba só o Mongo com `docker-compose up -d mongodb` e configure `MONGODB_HOST=localhost` (ou remova a variável — `localhost` já é o default), já que a porta `27017` do container está exposta para o host.
+
 ## 🌐 Páginas
 
 A navegação é dividida em abas: **Manutenção**, **Meus jogos** e **Machine Learning** (placeholder — integração AWS futura).
