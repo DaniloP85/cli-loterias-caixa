@@ -21,8 +21,10 @@ public class ConferenciaConcurso {
     private final List<Integer> dezenasAcertadas;
     private final int acertos;
     private final String situacao;
+    /** Só preenchido quando situacao == PREMIADO (FR-005). */
+    private final PremioFaixa premio;
 
     public static ConferenciaConcurso pendente(int concurso) {
-        return new ConferenciaConcurso(concurso, null, List.of(), List.of(), 0, PENDENTE);
+        return new ConferenciaConcurso(concurso, null, List.of(), List.of(), 0, PENDENTE, null);
     }
 }

@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="titulo" value="Meus jogos — Loterias Caixa"/>
 <%@ include file="comum/cabecalho.jspf" %>
+<fmt:setLocale value="pt_BR"/>
 
 <h1>Meus jogos</h1>
 
@@ -16,7 +17,8 @@
                                 data-min="${config.min}"
                                 data-max="${config.max}"
                                 data-min-dezenas="${config.minDezenas}"
-                                data-max-dezenas="${config.maxDezenas}">${config.nome}</option>
+                                data-max-dezenas="${config.maxDezenas}"
+                                data-precos="<c:forEach var='preco' items='${config.precos}' varStatus='status'>${preco.quantidadeDezenas}:${preco.valor}<c:if test='${!status.last}'>,</c:if></c:forEach>">${config.nome}</option>
                     </c:forEach>
                 </select>
             </label>
@@ -37,6 +39,14 @@
         <button class="botao destaque" type="submit" id="botao-salvar" disabled>Salvar</button>
         <p id="erro-jogo" class="erro" hidden></p>
     </form>
+
+    <div class="tabela-precos">
+        <h3>Tabela de preços — <span id="tabela-precos-loteria"></span></h3>
+        <table>
+            <thead><tr><th>Dezenas</th><th>Valor</th></tr></thead>
+            <tbody id="tabela-precos-linhas"></tbody>
+        </table>
+    </div>
 </div>
 
 <c:if test="${empty jogos}">
@@ -51,6 +61,7 @@
             <th>Dezenas</th>
             <th>Concursos</th>
             <th>Descrição</th>
+            <th>Custo</th>
             <th>Resumo</th>
             <th></th>
         </tr>
@@ -66,6 +77,7 @@
                 </td>
                 <td>${item.jogo.concursoInicial} a ${item.jogo.concursoFinal}</td>
                 <td><c:out value="${item.jogo.descricao}"/></td>
+                <td>R$ <fmt:formatNumber value="${item.custoAposta}" minFractionDigits="2" maxFractionDigits="2"/></td>
                 <td>
                     <span class="badge premiado" title="acertei">&#10004; ${item.resumo.premiados}</span>
                     <span class="badge nao-premiado" title="errei">&#10008; ${item.resumo.naoPremiados}</span>
@@ -99,6 +111,7 @@
             <th>Apuração</th>
             <th>Dezenas jogadas (acertos destacados)</th>
             <th>Acertos</th>
+            <th>Prêmio</th>
         </tr>
         </thead>
         <tbody>
@@ -116,6 +129,13 @@
                     <span class="badge premiado">${item.acertos}
                         <c:choose><c:when test="${item.acertos == 1}">acerto</c:when><c:otherwise>acertos</c:otherwise></c:choose>
                     </span>
+                </td>
+                <td>
+                    <c:choose>
+                        <c:when test="${item.premio.status == 'VALOR'}">R$ <fmt:formatNumber value="${item.premio.valor}" minFractionDigits="2" maxFractionDigits="2"/></c:when>
+                        <c:when test="${item.premio.status == 'SEM_GANHADOR'}">não houve ganhador nesta faixa</c:when>
+                        <c:otherwise>indisponível no momento</c:otherwise>
+                    </c:choose>
                 </td>
             </tr>
         </c:forEach>
@@ -139,6 +159,27 @@
         selecionadas = [];
         montarVolante();
         atualizarContador();
+        montarTabelaPrecos(opcao);
+    }
+
+    function montarTabelaPrecos(opcao) {
+        document.getElementById('tabela-precos-loteria').textContent = opcao.value;
+        var linhas = document.getElementById('tabela-precos-linhas');
+        linhas.innerHTML = '';
+        var pares = opcao.dataset.precos ? opcao.dataset.precos.split(',') : [];
+        pares.forEach(function (par) {
+            var partes = par.split(':');
+            var quantidade = partes[0];
+            var valor = parseFloat(partes[1]).toFixed(2).replace('.', ',');
+            var linha = document.createElement('tr');
+            var celulaQuantidade = document.createElement('td');
+            celulaQuantidade.textContent = quantidade;
+            var celulaValor = document.createElement('td');
+            celulaValor.textContent = 'R$ ' + valor;
+            linha.appendChild(celulaQuantidade);
+            linha.appendChild(celulaValor);
+            linhas.appendChild(linha);
+        });
     }
 
     function montarVolante() {

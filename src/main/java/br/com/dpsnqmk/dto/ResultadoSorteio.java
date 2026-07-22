@@ -19,4 +19,5 @@ public class ResultadoSorteio {
     private final int acertos;
     private final boolean premiado;
     private final String descricaoJogo;
+    private final PremioFaixa premio;
 }

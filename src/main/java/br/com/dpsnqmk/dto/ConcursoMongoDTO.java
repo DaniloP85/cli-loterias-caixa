@@ -38,17 +38,23 @@ public class ConcursoMongoDTO implements Serializable {
     @Field(name = "historial")
     private FeaturesDTO historial;
 
+    /** Rateio de prêmio por faixa; nulo/vazio em concursos importados antes desta funcionalidade existir. */
+    @Field(name = "rateio_premios")
+    private List<RateioPremioMongoDTO> rateioPremios;
+
     public ConcursoMongoDTO(int concurso,
                             String loteria,
                             List<Integer> numerosSorteados,
                             Date dataSorteio,
                             String status,
-                            FeaturesDTO historial) {
+                            FeaturesDTO historial,
+                            List<RateioPremioMongoDTO> rateioPremios) {
         this.concurso = concurso;
         this.loteria = loteria;
         this.numerosSorteados = numerosSorteados;
         this.dataSorteio = dataSorteio;
         this.status = status;
         this.historial = historial;
+        this.rateioPremios = rateioPremios;
     }
 }

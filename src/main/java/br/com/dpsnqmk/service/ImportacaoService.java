@@ -3,6 +3,8 @@ package br.com.dpsnqmk.service;
 import br.com.dpsnqmk.dto.ConcursoDTO;
 import br.com.dpsnqmk.dto.ConcursoMongoDTO;
 import br.com.dpsnqmk.dto.FeaturesDTO;
+import br.com.dpsnqmk.dto.RateioPremioDTO;
+import br.com.dpsnqmk.dto.RateioPremioMongoDTO;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.records.AltosBaixos;
 import br.com.dpsnqmk.records.ParesImparesFeature;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -181,7 +184,22 @@ public class ImportacaoService {
                         altosBaixos.baixos(),
                         altosBaixos.altos(),
                         calcularDesvioPadrao(numerosSorteados)
-                )
+                ),
+                converterRateioPremios(concursoDTO.getListaRateioPremio())
         );
+    }
+
+    /** Mapeia o rateio de prêmio por faixa vindo da API da Caixa para o formato persistido. */
+    static List<RateioPremioMongoDTO> converterRateioPremios(List<RateioPremioDTO> listaRateioPremio) {
+        if (listaRateioPremio == null) {
+            return null;
+        }
+        return listaRateioPremio.stream()
+                .map(item -> new RateioPremioMongoDTO(
+                        item.getFaixa(),
+                        item.getDescricaoFaixa(),
+                        item.getNumeroDeGanhadores(),
+                        BigDecimal.valueOf(item.getValorPremio())))
+                .toList();
     }
 }
