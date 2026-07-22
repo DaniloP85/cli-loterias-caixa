@@ -4,13 +4,11 @@ import br.com.dpsnqmk.controller.api.ConcursoNaoEncontradoException;
 import br.com.dpsnqmk.dto.ConcursoMongoDTO;
 import br.com.dpsnqmk.dto.ConferenciaJogo;
 import br.com.dpsnqmk.dto.EstatisticasDTO;
-import br.com.dpsnqmk.dto.PrecoAposta;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.repository.ConcursoRepository;
 import br.com.dpsnqmk.service.EstatisticaService;
 import br.com.dpsnqmk.service.ImportacaoService;
 import br.com.dpsnqmk.service.JogoService;
-import br.com.dpsnqmk.service.PremioService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -33,18 +31,15 @@ public class PaginasController {
     private final EstatisticaService estatisticaService;
     private final ImportacaoService importacaoService;
     private final JogoService jogoService;
-    private final PremioService premioService;
 
     public PaginasController(ConcursoRepository repository,
                              EstatisticaService estatisticaService,
                              ImportacaoService importacaoService,
-                             JogoService jogoService,
-                             PremioService premioService) {
+                             JogoService jogoService) {
         this.repository = repository;
         this.estatisticaService = estatisticaService;
         this.importacaoService = importacaoService;
         this.jogoService = jogoService;
-        this.premioService = premioService;
     }
 
     /** View model dos cards da home (classe com getters porque EL do JSP não resolve records). */
@@ -67,7 +62,6 @@ public class PaginasController {
         private final int max;
         private final int minDezenas;
         private final int maxDezenas;
-        private final List<PrecoAposta> precos;
     }
 
     @GetMapping("/")
@@ -128,7 +122,7 @@ public class PaginasController {
     public String jogos(Model model) {
         List<ConfigLoteria> loterias = Arrays.stream(Loteria.values())
                 .map(loteria -> new ConfigLoteria(loteria.nome(), loteria.getMin(), loteria.getMax(),
-                        loteria.getMinDezenas(), loteria.getMaxDezenas(), premioService.tabelaReferencia(loteria)))
+                        loteria.getMinDezenas(), loteria.getMaxDezenas()))
                 .toList();
         model.addAttribute("jogos", jogoService.listarComResumo());
         model.addAttribute("resultados", jogoService.resultadosSorteios());
