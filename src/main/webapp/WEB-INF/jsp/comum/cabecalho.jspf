@@ -13,7 +13,8 @@
 <nav>
     <a href="/" class="marca">🎲 Loterias Caixa</a>
     <a href="/" class="aba ${abaAtiva == 'manutencao' ? 'ativa' : ''}">Manutenção</a>
-    <a href="/jogos" class="aba ${abaAtiva == 'jogos' ? 'ativa' : ''}">Meus jogos</a>
+    <a href="/jogos/cadastro" class="aba ${abaAtiva == 'jogos-cadastro' ? 'ativa' : ''}">Cadastrar jogo</a>
+    <a href="/jogos" class="aba ${abaAtiva == 'jogos-conferencia' ? 'ativa' : ''}">Conferir jogos</a>
     <a href="/ml" class="aba ${abaAtiva == 'ml' ? 'ativa' : ''}">Machine Learning</a>
     <c:if test="${not empty loteria}">
         <span class="separador">|</span>
