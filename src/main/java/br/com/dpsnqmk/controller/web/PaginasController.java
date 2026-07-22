@@ -118,16 +118,22 @@ public class PaginasController {
         return "dashboard";
     }
 
-    @GetMapping("/jogos")
-    public String jogos(Model model) {
+    @GetMapping("/jogos/cadastro")
+    public String cadastroJogo(Model model) {
         List<ConfigLoteria> loterias = Arrays.stream(Loteria.values())
                 .map(loteria -> new ConfigLoteria(loteria.nome(), loteria.getMin(), loteria.getMax(),
                         loteria.getMinDezenas(), loteria.getMaxDezenas()))
                 .toList();
+        model.addAttribute("loterias", loterias);
+        model.addAttribute("abaAtiva", "jogos-cadastro");
+        return "jogos-cadastro";
+    }
+
+    @GetMapping("/jogos")
+    public String jogos(Model model) {
         model.addAttribute("jogos", jogoService.listarComResumo());
         model.addAttribute("resultados", jogoService.resultadosSorteios());
-        model.addAttribute("loterias", loterias);
-        model.addAttribute("abaAtiva", "jogos");
+        model.addAttribute("abaAtiva", "jogos-conferencia");
         return "jogos";
     }
 
@@ -135,7 +141,7 @@ public class PaginasController {
     public String jogo(@PathVariable String id, Model model) {
         ConferenciaJogo conferencia = jogoService.conferir(id);
         model.addAttribute("conferencia", conferencia);
-        model.addAttribute("abaAtiva", "jogos");
+        model.addAttribute("abaAtiva", "jogos-conferencia");
         return "jogo";
     }
 
