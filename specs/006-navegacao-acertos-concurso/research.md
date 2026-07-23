@@ -1,0 +1,42 @@
+# Phase 0 Research: Destaque persistente e paginação de concursos em cards de teimosinha
+
+Nenhum `NEEDS CLARIFICATION` restou no Technical Context do plan — as decisões abaixo documentam o raciocínio técnico e as alternativas descartadas para os pontos que o spec deixou como "o quê", não "como". Esta feature estende diretamente a 005 (`specs/005-destaque-acertos-pendentes/`); as decisões abaixo assumem o código já em produção descrito lá.
+
+## 1. Remover o gate `resumo.pendentes == 0` do destaque existente (US1)
+
+- **Decision**: Em `JogoService`, o método privado hoje chamado `dezenasAcertadasUltimoConcurso(List<ConferenciaConcurso>, ResumoJogo)` deixa de checar `resumo.getPendentes() == 0` no início. A varredura de trás para frente (primeiro item cuja `situacao` não é `PENDENTE`) já funciona igualmente bem para teimosinhas expiradas — ela não dependia do gate para achar o concurso certo, o gate só existia para *esconder* o resultado quando a teimosinha ainda tinha pendentes (regra da 005, revogada por FR-001 desta spec).
+- **Rationale**: é a mudança mínima que satisfaz FR-001 — reaproveita 100% a varredura já existente, sem nova consulta.
+- **Alternatives considered**: nenhuma; é a reversão direta de uma decisão de design já documentada em `specs/005-destaque-acertos-pendentes/research.md` §1.
+
+## 2. Expor o concurso comparado: novo campo `concursoComparado` em `JogoComResumo`
+
+- **Decision**: a mesma varredura de trás para frente passa a retornar o `ConferenciaConcurso` inteiro (não só `dezenasAcertadas`), via um método renomeado (ex. `ultimoConcursoApurado(List<ConferenciaConcurso>)` retornando `ConferenciaConcurso` ou `null`). `listarComResumo()` deriva os dois campos de `JogoComResumo` a partir desse único resultado: `dezenasAcertadasUltimoConcurso = resultado == null ? List.of() : resultado.getDezenasAcertadas()` e `concursoComparado = resultado == null ? null : resultado.getConcurso()`.
+- **Rationale**: evita duas varreduras da mesma lista para obter dado que já está disponível na primeira; `concursoComparado` como `Integer` (não `int`) permite representar "nenhum concurso apurado ainda" com `null`, que o JSP e o JSON do `GET /api/jogos` já sabem tratar (EL: `${item.concursoComparado == null}`; JS: `item.concursoComparado === null`).
+- **Alternatives considered**: manter dois campos calculados por duas varreduras separadas — descartado por duplicar a mesma lógica de "achar o último não-pendente" sem nenhum ganho; expor só o índice do concurso e recalcular o número no JSP a partir de `jogo.concursoInicial + índice` — descartado porque não é válido quando há furos causados por concursos pendentes fora da cauda final (a varredura já não assume isso, ver 005 research.md §1).
+
+## 3. Classificar "teimosinha": getter derivado em `JogoMongoDTO`, sem campo persistido
+
+- **Decision**: `JogoMongoDTO` ganha `public boolean isTeimosinha() { return quantidadeConcursos > 1; }` — equivalente a `concursoFinal > concursoInicial` (FR-004), reaproveitando o campo `quantidadeConcursos` já persistido. Como é um getter (padrão bean), Jackson o serializa automaticamente como `"teimosinha": true/false` no JSON de `GET /api/jogos` e `GET /api/jogos/{id}/conferencia` (o `jogo` aninhado é o mesmo `JogoMongoDTO`), do mesmo jeito que `getConcursoFinal()` já vira `"concursoFinal"` hoje.
+- **Rationale**: um único ponto de verdade para a classificação, reusado tanto pelo JSP (`${item.jogo.teimosinha}`) quanto pelo JS (`conferencia.jogo.teimosinha`) sem duplicar a comparação `>` em três lugares; segue o mesmo padrão já usado por `getConcursoFinal()` (getter derivado, não persistido).
+- **Alternatives considered**: computar `quantidadeConcursos > 1` (ou `concursoFinal > concursoInicial`) inline no JSP e no JS separadamente — descartado por duplicar uma regra que o próprio FR-004 nomeia como conceito de negócio ("teimosinha"), tornando o código menos rastreável à spec; persistir um campo `teimosinha` no Mongo — descartado por ser 100% derivável de `quantidadeConcursos`, que já é persistido.
+
+## 4. Fonte de dados da paginação: reaproveitar `GET /api/jogos/{id}/conferencia`, sem endpoint novo
+
+- **Decision**: `JogoRestController.conferencia(id)` (já existente, inalterado) retorna `ConferenciaJogo { jogo, resumo, concursos }`, onde `concursos` é a lista **completa** do intervalo (`concursoInicial` a `concursoFinal`), cada item com `situacao` (`PREMIADO`/`NAO_PREMIADO`/`PENDENTE`) e `dezenasAcertadas` (vazia quando pendente). O JS de `jogos.jsp` (que hoje só busca esse endpoint quando o usuário clica no badge "premiados", em `alternarPremiados`) passa a buscar o mesmo endpoint também no primeiro clique em voltar/avançar de um card, cacheando o resultado em uma variável local por card. A partir da resposta, filtra `situacao !== 'PENDENTE'` e ordena por `concurso` ascendente — esse array é exatamente a sequência navegável da US3, cada item já trazendo `dezenasAcertadas` prontas para re-renderizar o destaque.
+- **Rationale**: o endpoint já faz exatamente a consulta e o cálculo (`conferirConcursos`) que a paginação precisa; criar um endpoint novo (ex. `GET /api/jogos/{id}/conferencia/{concurso}`) duplicaria a mesma consulta ao Mongo por concurso clicado, quando uma única chamada já traz o intervalo inteiro. Fetch único e cache no cliente é mais simples e mais barato do que uma chamada por clique.
+- **Alternatives considered**: endpoint novo por concurso (avaliado inicialmente) — descartado pelo motivo acima; expandir `GET /api/jogos` para já embutir a lista completa de concursos apurados em cada `JogoComResumo` (SSR de tudo, sem fetch nenhum) — descartado porque infla a resposta da listagem principal (usada para renderizar todos os cards de uma vez) com dado que só é necessário quando o usuário efetivamente pagina; o padrão "carrega sob demanda no primeiro clique" já é o mesmo usado hoje pelo painel de premiados.
+
+## 5. Estado inicial dos controles (SSR) sem precisar da lista completa de apurados
+
+- **Decision**: o estado inicial de cada card (antes de qualquer clique) é renderizado no servidor usando só os campos já existentes em `ResumoJogo`/`JogoComResumo`, sem precisar buscar a lista completa de concursos:
+  - **Avançar**: sempre desabilitado no estado inicial — o card sempre nasce mostrando o concurso mais recente apurado (não há "mais recente que o mais recente").
+  - **Voltar**: habilitado no estado inicial sse `resumo.conferidos > 1` (`conferidos = premiados + naoPremiados`, ou seja, quantidade de concursos já apurados no intervalo, campo que `ResumoJogo` já expõe) — havendo mais de um concurso apurado, existe pelo menos um concurso anterior ao mais recente para onde voltar.
+  - **Ambos desabilitados** quando `concursoComparado == null` (nenhum concurso apurado ainda) — cobre tanto o caso "não-teimosinha sem apurado" (controles nem aparecem, FR-002/FR-006) quanto "teimosinha sem nenhum apurado" (controles aparecem desabilitados + rótulo "aguardando apuração", FR-012).
+- **Rationale**: evita que o card precise buscar a lista completa de concursos só para desenhar o estado inicial dos botões — `resumo.conferidos` (já calculado por `resumo(concursos)` dentro de `listarComResumo()`, sem consulta extra) é suficiente para decidir o estado inicial de "voltar", e "avançar" é trivialmente sempre falso no início.
+- **Alternatives considered**: sempre buscar `GET /api/jogos/{id}/conferencia` de todos os cards já no carregamento da página (`/jogos`) para saber o estado exato dos botões de cada um — descartado por transformar uma página que hoje faz 1 requisição (`GET /api/jogos`) em N+1 requisições simultâneas ao carregar, só para desenhar o estado de botões que `resumo.conferidos` já responde sem custo.
+
+## 6. Nenhuma mudança na regra de premiação/pendência nem nos badges existentes
+
+- **Decision**: `ResumoJogo`, `conferirConcursos(...)`, `Loteria.premiado(...)` e os badges premiados/não-premiados/pendentes do card permanecem exatamente como estão. `resumo.conferidos` já existia e não precisa de nenhuma mudança para ser reaproveitado pela decisão 5.
+- **Rationale**: mantém as UIs (contagem dos badges, presença do destaque, estado dos controles de paginação) todas derivadas da mesma fonte de verdade (`conferirConcursos`), sem lógica duplicada — mesmo princípio já aplicado em 005 research.md §4.
+- **Alternatives considered**: nenhuma — fora de escopo por Assumptions da spec.

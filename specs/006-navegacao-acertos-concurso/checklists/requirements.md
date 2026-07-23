@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Destaque persistente e navegação de acertos por concurso nos cards de teimosinha
+# Specification Quality Checklist: Destaque persistente e paginação de concursos em cards de teimosinha
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-07-23
@@ -31,4 +31,6 @@
 
 ## Notes
 
-- Todos os itens passaram na primeira validação; nenhum marcador [NEEDS CLARIFICATION] foi necessário — as ambiguidades identificadas (ex.: se haveria um controle para "avançar" de volta ao concurso mais recente) foram resolvidas com defaults documentados em Assumptions, dado que o usuário pediu para revisar a spec antes de prosseguir para `/speckit-plan`.
+- Spec revisada com o usuário para simplificar a regra de navegação: os controles de voltar/avançar (paginação) só existem para jogos classificados como "teimosinha" (intervalo com mais de um concurso); jogos de concurso único não ganham controles, apenas o rótulo de comparação. O controle de avançar, antes fora de escopo, agora faz parte da feature (paginação bidirecional), com base no esboço em `card_tela_conferencia.md`.
+- Sessão de clarificação em 2026-07-23 (`/speckit-clarify`) resolveu o comportamento de uma teimosinha sem nenhum concurso apurado: os controles aparecem desabilitados e o rótulo mostra um texto indicativo de espera ("aguardando apuração") — formalizado em FR-012 e nos cenários correspondentes de US2/US3.
+- Todos os itens seguem passando após as duas rodadas de revisão; nenhum marcador [NEEDS CLARIFICATION] permanece.
