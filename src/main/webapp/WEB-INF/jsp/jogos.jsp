@@ -18,11 +18,33 @@
                     <h2>${item.jogo.loteria} de ${item.jogo.concursoInicial} até ${item.jogo.concursoFinal}</h2>
                     <button class="botao-fechar" onclick="excluir('${item.jogo.id}')" title="excluir" aria-label="excluir">&times;</button>
                 </div>
-                <div class="dezenas-grandes">
+                <div class="dezenas-grandes" id="dezenas-${item.jogo.id}">
                     <c:forEach var="numero" items="${item.jogo.numeros}">
                         <span class="dezena grande ${item.dezenasAcertadasUltimoConcurso.contains(numero) ? 'acertada' : ''}">${numero}</span>
                     </c:forEach>
                 </div>
+                <c:if test="${item.jogo.teimosinha or item.concursoComparado != null}">
+                    <div class="paginacao-concurso" id="paginacao-${item.jogo.id}">
+                        <span id="rotulo-${item.jogo.id}">
+                            <c:choose>
+                                <c:when test="${item.concursoComparado != null}">comparação com o concurso ${item.concursoComparado}</c:when>
+                                <c:otherwise>aguardando apuração</c:otherwise>
+                            </c:choose>
+                        </span>
+                        <c:if test="${item.jogo.teimosinha}">
+                            <span class="controles-paginacao">
+                                <button type="button" class="botao" id="voltar-${item.jogo.id}"
+                                        onclick="navegarConcurso('${item.jogo.id}', -1)"
+                                        title="concurso anterior" aria-label="concurso anterior"
+                                        ${item.resumo.conferidos <= 1 ? 'disabled' : ''}>&lsaquo;</button>
+                                <button type="button" class="botao" id="avancar-${item.jogo.id}"
+                                        onclick="navegarConcurso('${item.jogo.id}', 1)"
+                                        title="próximo concurso" aria-label="próximo concurso"
+                                        disabled>&rsaquo;</button>
+                            </span>
+                        </c:if>
+                    </div>
+                </c:if>
                 <c:if test="${not empty item.jogo.descricao}">
                     <p><c:out value="${item.jogo.descricao}"/></p>
                 </c:if>
@@ -115,6 +137,47 @@
         fetch('/api/jogos/' + id, {method: 'DELETE'}).then(function () {
             location.reload();
         });
+    }
+
+    var estadoPaginacao = {};
+
+    function navegarConcurso(jogoId, direcao) {
+        var estado = estadoPaginacao[jogoId];
+        if (!estado) {
+            fetch('/api/jogos/' + jogoId + '/conferencia')
+                .then(function (resposta) { return resposta.json(); })
+                .then(function (conferencia) {
+                    var apurados = conferencia.concursos.filter(function (c) {
+                        return c.situacao !== 'PENDENTE';
+                    }).sort(function (a, b) {
+                        return a.concurso - b.concurso;
+                    });
+                    estadoPaginacao[jogoId] = {apurados: apurados, indice: apurados.length - 1};
+                    aplicarNavegacao(jogoId, direcao);
+                });
+            return;
+        }
+        aplicarNavegacao(jogoId, direcao);
+    }
+
+    function aplicarNavegacao(jogoId, direcao) {
+        var estado = estadoPaginacao[jogoId];
+        estado.indice = Math.max(0, Math.min(estado.apurados.length - 1, estado.indice + direcao));
+        renderizarConcursoAtual(jogoId);
+    }
+
+    function renderizarConcursoAtual(jogoId) {
+        var estado = estadoPaginacao[jogoId];
+        var atual = estado.apurados[estado.indice];
+
+        document.querySelectorAll('#dezenas-' + jogoId + ' .dezena').forEach(function (span) {
+            var numero = parseInt(span.textContent, 10);
+            span.classList.toggle('acertada', atual.dezenasAcertadas.indexOf(numero) >= 0);
+        });
+
+        document.getElementById('rotulo-' + jogoId).textContent = 'comparação com o concurso ' + atual.concurso;
+        document.getElementById('voltar-' + jogoId).disabled = estado.indice === 0;
+        document.getElementById('avancar-' + jogoId).disabled = estado.indice === estado.apurados.length - 1;
     }
 </script>
 

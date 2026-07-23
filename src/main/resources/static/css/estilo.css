@@ -293,6 +293,27 @@ table.features { max-width: 480px; }
 .dezena.grande { font-size: 1.3rem; min-width: 2.8rem; padding: 0.4rem 0.5rem; }
 .dezenas-grandes { margin: 1rem 0; }
 
+.paginacao-concurso {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.controles-paginacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.paginacao-concurso .botao { padding: 0.2rem 0.6rem; font-size: 0.85rem; }
+
 .paginacao {
     display: flex;
     gap: 1rem;
