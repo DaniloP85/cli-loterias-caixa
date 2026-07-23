@@ -38,7 +38,7 @@ public class JogoService {
     }
 
     public JogoMongoDTO criar(String loteriaNome, List<Integer> numeros,
-                              Integer concursoInicial, Integer quantidadeConcursos, String descricao) {
+                              Integer concursoInicial, Integer concursoFinal, String descricao) {
         Loteria loteria = Loteria.from(loteriaNome);
 
         TreeSet<Integer> dezenas = validarDezenas(loteria, numeros);
@@ -50,9 +50,10 @@ public class JogoService {
         if (concursoInicial == null || concursoInicial < 1) {
             throw new IllegalArgumentException("Concurso inicial deve ser maior ou igual a 1");
         }
-        if (quantidadeConcursos == null || quantidadeConcursos < 1) {
-            throw new IllegalArgumentException("Quantidade de concursos deve ser maior ou igual a 1");
+        if (concursoFinal == null || concursoFinal < concursoInicial) {
+            throw new IllegalArgumentException("Concurso final deve ser maior ou igual ao concurso inicial");
         }
+        int quantidadeConcursos = concursoFinal - concursoInicial + 1;
 
         JogoMongoDTO jogo = new JogoMongoDTO(loteria.nome(), List.copyOf(dezenas),
                 concursoInicial, quantidadeConcursos, descricao, new Date());
