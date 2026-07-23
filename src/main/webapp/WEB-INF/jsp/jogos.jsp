@@ -20,7 +20,7 @@
                 </div>
                 <div class="dezenas-grandes">
                     <c:forEach var="numero" items="${item.jogo.numeros}">
-                        <span class="dezena grande">${numero}</span>
+                        <span class="dezena grande ${item.dezenasAcertadasUltimoConcurso.contains(numero) ? 'acertada' : ''}">${numero}</span>
                     </c:forEach>
                 </div>
                 <c:if test="${not empty item.jogo.descricao}">

@@ -89,10 +89,12 @@ public class JogoService {
         return jogoRepository.findAllByOrderByCriadoEmDesc().stream()
                 .map(jogo -> {
                     List<ConferenciaConcurso> concursos = conferirConcursos(jogo);
+                    ResumoJogo resumo = resumo(concursos);
                     BigDecimal custoTotal = premioService
                             .custoAposta(Loteria.from(jogo.getLoteria()), jogo.getNumeros().size())
                             .multiply(BigDecimal.valueOf(jogo.getQuantidadeConcursos()));
-                    return new JogoComResumo(jogo, resumo(concursos), custoTotal, ganhoTotal(concursos));
+                    return new JogoComResumo(jogo, resumo, custoTotal, ganhoTotal(concursos),
+                            dezenasAcertadasUltimoConcurso(concursos, resumo));
                 })
                 .toList();
     }
@@ -155,6 +157,20 @@ public class JogoService {
             }
         }
         return new ResumoJogo(premiados + naoPremiados, premiados, naoPremiados, pendentes);
+    }
+
+    /** Dezenas acertadas do concurso mais recente já apurado, só enquanto houver concurso pendente (research.md §1-2). */
+    private List<Integer> dezenasAcertadasUltimoConcurso(List<ConferenciaConcurso> concursos, ResumoJogo resumo) {
+        if (resumo.getPendentes() == 0) {
+            return List.of();
+        }
+        for (int i = concursos.size() - 1; i >= 0; i--) {
+            ConferenciaConcurso concurso = concursos.get(i);
+            if (!ConferenciaConcurso.PENDENTE.equals(concurso.getSituacao())) {
+                return concurso.getDezenasAcertadas();
+            }
+        }
+        return List.of();
     }
 
     /** Soma dos prêmios já recebidos pela teimosinha (research.md §5). */
