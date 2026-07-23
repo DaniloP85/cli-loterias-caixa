@@ -69,3 +69,7 @@ The Caixa API's certificate isn't trusted by the default JVM truststore. `instal
 ### Logging
 
 `logback-spring.xml` emits structured JSON to console only (via `logstash-logback-encoder`); there is a CONSOLE (plain-text) appender defined but not wired to the root logger.
+
+### GitHub project board
+
+Tasks from `tasks.md` get converted to GitHub issues (`speckit-taskstoissues`) and tracked on the "Acompanhamento" project board (#8, owner `DaniloP85`). When implementing a task backed by an issue, invoke the `github-board-status` skill: move the issue to `in-progress` when starting it, and to `in-review` once it's implemented and validated (before moving to the next task). Moving to `done` happens separately, when the PR merges or the issue is closed.
