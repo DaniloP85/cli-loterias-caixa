@@ -63,6 +63,8 @@
         var painel = document.getElementById('painel-premiados');
         var premiados = conferencia.concursos.filter(function (item) {
             return item.situacao === 'PREMIADO';
+        }).sort(function (a, b) {
+            return b.concurso - a.concurso;
         });
 
         if (premiados.length === 0) {
