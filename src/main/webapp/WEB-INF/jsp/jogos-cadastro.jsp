@@ -22,10 +22,10 @@
                 </select>
             </label>
             <label>Concurso inicial
-                <input id="campo-concurso" type="number" min="1" required>
+                <input id="campo-concurso" type="number" min="1" required onchange="ajustarConcursoFinal()">
             </label>
-            <label>Qtd. de concursos
-                <input id="campo-qtd" type="number" min="1" value="1" required>
+            <label>Concurso final
+                <input id="campo-concurso-final" type="number" min="1" required>
             </label>
             <label>Descrição
                 <input id="campo-descricao" placeholder="teimosinha de julho">
@@ -101,13 +101,20 @@
             selecionadas.length >= configAtual.maxDezenas);
     }
 
+    function ajustarConcursoFinal() {
+        var campoFinal = document.getElementById('campo-concurso-final');
+        if (!campoFinal.value) {
+            campoFinal.value = document.getElementById('campo-concurso').value;
+        }
+    }
+
     function limparFormulario() {
         selecionadas = [];
         document.querySelectorAll('.dezena-volante.selecionada').forEach(function (botao) {
             botao.classList.remove('selecionada');
         });
         document.getElementById('campo-concurso').value = '';
-        document.getElementById('campo-qtd').value = '1';
+        document.getElementById('campo-concurso-final').value = '';
         document.getElementById('campo-descricao').value = '';
         atualizarContador();
     }
@@ -126,7 +133,7 @@
                 loteria: document.getElementById('campo-loteria').value,
                 numeros: selecionadas.slice().sort(function (a, b) { return a - b; }),
                 concursoInicial: parseInt(document.getElementById('campo-concurso').value, 10),
-                quantidadeConcursos: parseInt(document.getElementById('campo-qtd').value, 10),
+                concursoFinal: parseInt(document.getElementById('campo-concurso-final').value, 10),
                 descricao: document.getElementById('campo-descricao').value
             })
         }).then(function (resposta) {

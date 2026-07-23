@@ -22,7 +22,7 @@ public class JogoRestController {
 
     /** Corpo do POST; record é ok aqui (só Jackson, não passa por JSP EL). */
     public record NovoJogoRequest(String loteria, List<Integer> numeros,
-                                  Integer concursoInicial, Integer quantidadeConcursos,
+                                  Integer concursoInicial, Integer concursoFinal,
                                   String descricao) {}
 
     private final JogoService jogoService;
@@ -34,7 +34,7 @@ public class JogoRestController {
     @PostMapping
     public ResponseEntity<JogoMongoDTO> criar(@RequestBody NovoJogoRequest request) {
         JogoMongoDTO jogo = jogoService.criar(request.loteria(), request.numeros(),
-                request.concursoInicial(), request.quantidadeConcursos(), request.descricao());
+                request.concursoInicial(), request.concursoFinal(), request.descricao());
         return ResponseEntity.status(HttpStatus.CREATED).body(jogo);
     }
 
