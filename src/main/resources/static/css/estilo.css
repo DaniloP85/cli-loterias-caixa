@@ -66,6 +66,10 @@ footer {
     gap: 1rem;
 }
 
+#painel-premiados {
+    margin-top: 1rem;
+}
+
 .card-cabecalho {
     display: flex;
     justify-content: space-between;
