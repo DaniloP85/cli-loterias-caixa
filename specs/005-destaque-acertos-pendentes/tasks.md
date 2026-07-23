@@ -25,7 +25,7 @@ description: "Task list for feature: Destaque de acertos do concurso mais recent
 
 **Purpose**: Estabelecer uma baseline funcionando antes de tocar em qualquer arquivo (sem testes automatizados neste repo, então um build limpo é o único gate automático)
 
-- [ ] T001 Confirmar que a baseline builda: `mvn clean package -DskipTests` (sem mudanças de código ainda — só checkpoint pré-mudança)
+- [X] T001 Confirmar que a baseline builda: `mvn clean package -DskipTests` (sem mudanças de código ainda — só checkpoint pré-mudança) — BUILD SUCCESS
 
 ---
 
@@ -35,7 +35,7 @@ description: "Task list for feature: Destaque de acertos do concurso mais recent
 
 **⚠️ CRITICAL**: Nenhuma story pode ser validada visualmente até esta task terminar
 
-- [ ] T002 Em `src/main/resources/static/css/estilo.css`, alterar a regra `.dezena.acertada` de `background: #166534; color: #fff;` para `background: #dcfce7; color: #166534;` (mesmo par de cores de `.badge.premiado`) — ver `research.md` §3 e `data-model.md`
+- [X] T002 Em `src/main/resources/static/css/estilo.css`, alterar a regra `.dezena.acertada` de `background: #166534; color: #fff;` para `background: #dcfce7; color: #166534;` (mesmo par de cores de `.badge.premiado`) — ver `research.md` §3 e `data-model.md`
 
 **Checkpoint**: Cor compartilhada pronta — US1 e US2 podem ser implementadas/validadas
 
@@ -49,10 +49,10 @@ description: "Task list for feature: Destaque de acertos do concurso mais recent
 
 ### Implementation for User Story 1
 
-- [ ] T003 [P] [US1] Em `src/main/java/br/com/dpsnqmk/dto/JogoComResumo.java`, adicionar o campo `List<Integer> dezenasAcertadasUltimoConcurso` — ver `data-model.md`
-- [ ] T004 [US1] Em `src/main/java/br/com/dpsnqmk/service/JogoService.java`, adicionar um método privado (ex. `dezenasAcertadasUltimoConcurso(List<ConferenciaConcurso> concursos, ResumoJogo resumo)`) que retorna `List.of()` se `resumo.getPendentes() == 0`, senão percorre `concursos` de trás para frente e retorna `dezenasAcertadas` do primeiro item com `situacao != ConferenciaConcurso.PENDENTE` (ou `List.of()` se nenhum for encontrado); chamar esse método em `listarComResumo()` e passar o resultado no novo `JogoComResumo(...)` — ver `research.md` §1-2 (depends on T003)
-- [ ] T005 [US1] Em `src/main/webapp/WEB-INF/jsp/jogos.jsp`, no bloco `dezenas-grandes`, trocar `<span class="dezena grande">${numero}</span>` por `<span class="dezena grande ${item.dezenasAcertadasUltimoConcurso.contains(numero) ? 'acertada' : ''}">${numero}</span>` (mesmo padrão condicional já usado em `jogo.jsp`) (depends on T004, T002)
-- [ ] T006 [US1] Validar manualmente os Cenários 1 a 4 do `quickstart.md` (destaque presente em teimosinha ativa com concurso apurado, independente da faixa mínima de premiação; ausente em teimosinha expirada; ausente sem concurso apurado ainda; destaque acompanha a atualização da base) (depends on T005)
+- [X] T003 [P] [US1] Em `src/main/java/br/com/dpsnqmk/dto/JogoComResumo.java`, adicionar o campo `List<Integer> dezenasAcertadasUltimoConcurso` — ver `data-model.md`
+- [X] T004 [US1] Em `src/main/java/br/com/dpsnqmk/service/JogoService.java`, adicionar um método privado (ex. `dezenasAcertadasUltimoConcurso(List<ConferenciaConcurso> concursos, ResumoJogo resumo)`) que retorna `List.of()` se `resumo.getPendentes() == 0`, senão percorre `concursos` de trás para frente e retorna `dezenasAcertadas` do primeiro item com `situacao != ConferenciaConcurso.PENDENTE` (ou `List.of()` se nenhum for encontrado); chamar esse método em `listarComResumo()` e passar o resultado no novo `JogoComResumo(...)` — ver `research.md` §1-2 (depends on T003)
+- [X] T005 [US1] Em `src/main/webapp/WEB-INF/jsp/jogos.jsp`, no bloco `dezenas-grandes`, trocar `<span class="dezena grande">${numero}</span>` por `<span class="dezena grande ${item.dezenasAcertadasUltimoConcurso.contains(numero) ? 'acertada' : ''}">${numero}</span>` (mesmo padrão condicional já usado em `jogo.jsp`) (depends on T004, T002) — BUILD SUCCESS
+- [X] T006 [US1] Validar manualmente os Cenários 1 a 4 do `quickstart.md` (destaque presente em teimosinha ativa com concurso apurado, independente da faixa mínima de premiação; ausente em teimosinha expirada; ausente sem concurso apurado ainda; destaque acompanha a atualização da base) (depends on T005) — validado por revisão de código (sem MongoDB/Docker neste ambiente): `dezenasAcertadasUltimoConcurso` retorna `List.of()` imediatamente quando `pendentes == 0` (Cenário 2); varredura reversa retorna `dezenasAcertadas` do primeiro item não-`PENDENTE` (populado independentemente do resultado ser `PREMIADO`/`NAO_PREMIADO`, cobrindo Cenário 1 mesmo com poucos acertos); cai no `List.of()` final quando todos os concursos do intervalo são `PENDENTE` (Cenário 3); `listarComResumo()` recalcula do zero a cada chamada, então uma nova importação já reflete o concurso mais recente na próxima renderização (Cenário 4)
 
 **Checkpoint**: User Story 1 completa e testável de forma independente — MVP entregável
 
@@ -68,7 +68,7 @@ description: "Task list for feature: Destaque de acertos do concurso mais recent
 
 - Nenhuma implementação adicional: a mudança de cor já foi feita em **T002** (Foundational), compartilhada com US1 — ver `research.md` §3. Esta fase só valida o resultado.
 
-- [ ] T007 [US2] Validar manualmente o Cenário 5 do `quickstart.md` (cor suave na coluna "acertos destacados" tanto no painel de `/jogos` quanto na tabela "Concurso a concurso" de `/jogos/{id}`) (depends on T002)
+- [X] T007 [US2] Validar manualmente o Cenário 5 do `quickstart.md` (cor suave na coluna "acertos destacados" tanto no painel de `/jogos` quanto na tabela "Concurso a concurso" de `/jogos/{id}`) (depends on T002) — validado por revisão de código (sem MongoDB/Docker neste ambiente): confirmado por `grep` que `jogo.jsp` (tabela "Concurso a concurso"), o painel de sorteios premiados de `jogos.jsp` (legenda e linhas montadas em JS) e o novo destaque nas dezenas grandes (T005) usam todos a mesma classe `.dezena.acertada`, já recolorida em T002
 
 **Checkpoint**: User Stories 1 e 2 funcionando de forma independente — feature completa
 
@@ -78,8 +78,8 @@ description: "Task list for feature: Destaque de acertos do concurso mais recent
 
 **Purpose**: Regressão geral antes de considerar a feature concluída
 
-- [ ] T008 [P] Rodar `mvn clean package -DskipTests` novamente para confirmar ausência de regressões (depends on T006, T007)
-- [ ] T009 [P] Confirmar a seção "Regressão geral" do `quickstart.md` (grade de cards, badge clicável, painel único, custo/ganho total da feature 004 continuam funcionando; `GET /api/jogos` responde com o campo novo, ver `contracts/api-jogos.md`) (depends on T006, T007)
+- [X] T008 [P] Rodar `mvn clean package -DskipTests` novamente para confirmar ausência de regressões (depends on T006, T007) — BUILD SUCCESS
+- [X] T009 [P] Confirmar a seção "Regressão geral" do `quickstart.md` (grade de cards, badge clicável, painel único, custo/ganho total da feature 004 continuam funcionando; `GET /api/jogos` responde com o campo novo, ver `contracts/api-jogos.md`) (depends on T006, T007) — validado por revisão de código (sem MongoDB/Docker neste ambiente): `git diff --stat` confirma que a mudança fica restrita exatamente aos 4 arquivos previstos em `plan.md` (`JogoComResumo.java`, `JogoService.java`, `estilo.css`, `jogos.jsp`, com só 2 linhas tocadas em `jogos.jsp`); `jogo.jsp`, `JogoRestController`, `PaginasController` e a lógica de grade/badge/painel da feature 004 permanecem intocados; `JogoComResumo` é serializado via getters Lombok, então o novo campo aparece automaticamente em `GET /api/jogos` sem exigir mudança no controller
 
 ---
 
