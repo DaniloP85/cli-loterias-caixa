@@ -60,6 +60,43 @@ footer {
 .estado { color: #6b7280; font-size: 0.85rem; }
 .acoes { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
 
+.grade-jogos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+#painel-premiados {
+    margin-top: 1rem;
+}
+
+.card-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.card-cabecalho h2 { margin: 0; }
+
+.botao-fechar {
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.botao-fechar:hover { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+
 .botao {
     display: inline-block;
     padding: 0.4rem 0.8rem;
@@ -115,6 +152,9 @@ footer {
 .badge.nao-premiado { background: #fee2e2; color: #991b1b; }
 .badge.pendente { background: #fef9c3; color: #854d0e; }
 .badge.comum { background: #e5e7eb; color: #374151; }
+
+.badge.premiado.clicavel { cursor: pointer; }
+.badge.premiado.clicavel:hover { background: #bbf7d0; }
 
 .legenda-cores {
     display: flex;

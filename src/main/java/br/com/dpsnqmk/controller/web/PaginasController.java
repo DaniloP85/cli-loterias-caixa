@@ -132,7 +132,6 @@ public class PaginasController {
     @GetMapping("/jogos")
     public String jogos(Model model) {
         model.addAttribute("jogos", jogoService.listarComResumo());
-        model.addAttribute("resultados", jogoService.resultadosSorteios());
         model.addAttribute("abaAtiva", "jogos-conferencia");
         return "jogos";
     }
