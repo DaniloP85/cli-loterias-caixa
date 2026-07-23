@@ -55,4 +55,8 @@ public class JogoMongoDTO implements Serializable {
     public int getConcursoFinal() {
         return concursoInicial + quantidadeConcursos - 1;
     }
+
+    public boolean isTeimosinha() {
+        return quantidadeConcursos > 1;
+    }
 }
