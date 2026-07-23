@@ -8,15 +8,14 @@ import br.com.dpsnqmk.dto.ConferenciaJogo;
 import br.com.dpsnqmk.dto.JogoComResumo;
 import br.com.dpsnqmk.dto.JogoMongoDTO;
 import br.com.dpsnqmk.dto.PremioFaixa;
-import br.com.dpsnqmk.dto.ResultadoSorteio;
 import br.com.dpsnqmk.dto.ResumoJogo;
 import br.com.dpsnqmk.enums.Loteria;
 import br.com.dpsnqmk.repository.ConcursoRepository;
 import br.com.dpsnqmk.repository.JogoRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -86,34 +85,15 @@ public class JogoService {
         return conferirContra(resultado, dezenas, loteria);
     }
 
-    /** Sorteios premiados dos jogos cadastrados (retorno financeiro), mais recente primeiro. */
-    public List<ResultadoSorteio> resultadosSorteios() {
-        List<ResultadoSorteio> resultados = new ArrayList<>();
-        for (JogoMongoDTO jogo : jogoRepository.findAll()) {
-            for (ConferenciaConcurso conferencia : conferirConcursos(jogo)) {
-                if (!ConferenciaConcurso.PREMIADO.equals(conferencia.getSituacao())) {
-                    continue;
-                }
-                resultados.add(new ResultadoSorteio(
-                        jogo.getLoteria(),
-                        conferencia.getConcurso(),
-                        conferencia.getDataSorteio(),
-                        jogo.getNumeros(),
-                        conferencia.getDezenasAcertadas(),
-                        conferencia.getAcertos(),
-                        true,
-                        jogo.getDescricao(),
-                        conferencia.getPremio()));
-            }
-        }
-        resultados.sort(Comparator.comparing(ResultadoSorteio::getDataSorteio).reversed());
-        return resultados;
-    }
-
     public List<JogoComResumo> listarComResumo() {
         return jogoRepository.findAllByOrderByCriadoEmDesc().stream()
-                .map(jogo -> new JogoComResumo(jogo, resumo(conferirConcursos(jogo)),
-                        premioService.custoAposta(Loteria.from(jogo.getLoteria()), jogo.getNumeros().size())))
+                .map(jogo -> {
+                    List<ConferenciaConcurso> concursos = conferirConcursos(jogo);
+                    BigDecimal custoTotal = premioService
+                            .custoAposta(Loteria.from(jogo.getLoteria()), jogo.getNumeros().size())
+                            .multiply(BigDecimal.valueOf(jogo.getQuantidadeConcursos()));
+                    return new JogoComResumo(jogo, resumo(concursos), custoTotal, ganhoTotal(concursos));
+                })
                 .toList();
     }
 
@@ -175,5 +155,17 @@ public class JogoService {
             }
         }
         return new ResumoJogo(premiados + naoPremiados, premiados, naoPremiados, pendentes);
+    }
+
+    /** Soma dos prêmios já recebidos pela teimosinha (research.md §5). */
+    private BigDecimal ganhoTotal(List<ConferenciaConcurso> concursos) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (ConferenciaConcurso concurso : concursos) {
+            if (ConferenciaConcurso.PREMIADO.equals(concurso.getSituacao())
+                    && PremioFaixa.VALOR.equals(concurso.getPremio().getStatus())) {
+                total = total.add(concurso.getPremio().getValor());
+            }
+        }
+        return total;
     }
 }
